@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🛒 Grocery Meal Picker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #2d6a4f;
+    }
+
+    header p {
+      color: #555;
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Config Panel ── */
+    #config-panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      max-width: 640px;
+      margin: 0 auto 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    #config-panel h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #2d6a4f;
+      margin-bottom: 10px;
+    }
+
+    #config-panel label {
+      display: block;
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    #config-panel input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    #config-panel input:focus {
+      outline: none;
+      border-color: #2d6a4f;
+      box-shadow: 0 0 0 3px rgba(45,106,79,0.15);
+    }
+
+    #load-btn {
+      background: #2d6a4f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    #load-btn:hover { background: #1b4332; }
+    #load-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* ── Status bar ── */
+    #status-bar {
+      max-width: 640px;
+      margin: 0 auto 16px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      display: none;
+    }
+
+    #status-bar.info  { background: #e8f4fd; color: #1a6496; display: block; }
+    #status-bar.error { background: #fde8e8; color: #c0392b; display: block; }
+    #status-bar.ok    { background: #e8f8ed; color: #1e7e34; display: block; }
+
+    /* ── Meal Grid ── */
+    #meal-section {
+      max-width: 640px;
+      margin: 0 auto;
+      display: none;
+    }
+
+    #meal-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 14px;
+    }
+
+    #meal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .meal-card {
+      background: #fff;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.18s;
+      user-select: none;
+    }
+
+    .meal-card:hover {
+      border-color: #2d6a4f;
+      box-shadow: 0 2px 8px rgba(45,106,79,0.15);
+    }
+
+    .meal-card.selected {
+      border-color: #2d6a4f;
+      background: #e8f5ee;
+    }
+
+    .meal-card .meal-name {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: #1a202c;
+    }
+
+    .meal-card .meal-meta {
+      font-size: 0.78rem;
+      color: #777;
+      margin-top: 4px;
+    }
+
+    .meal-card .check {
+      float: right;
+      font-size: 1.1rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .meal-card.selected .check { opacity: 1; }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .controls button {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .controls button:hover { background: #f0f4f8; }
+
+    #shop-btn {
+      background: #2d6a4f !important;
+      color: white !important;
+      border-color: #2d6a4f !important;
+      font-weight: 700;
+      font-size: 1rem !important;
+    }
+
+    #shop-btn:hover { background: #1b4332 !important; }
+    #shop-btn:disabled { background: #aaa !important; border-color: #aaa !important; cursor: not-allowed; }
+
+    /* ── Ingredient Preview ── */
+    #preview-section {
+      max-width: 640px;
+      margin: 20px auto 0;
+      display: none;
+    }
+
+    #preview-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    #ingredient-list {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .meal-group-header {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #2d6a4f;
+      margin: 12px 0 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e8f5ee;
+    }
+
+    .meal-group-header:first-child { margin-top: 0; }
+
+    .ingredient-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      font-size: 0.88rem;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .ingredient-row:last-child { border-bottom: none; }
+
+    .ing-name { color: #333; }
+    .ing-qty  { color: #666; font-size: 0.82rem; text-align: right; }
+    .ing-brand{ color: #999; font-size: 0.78rem; font-style: italic; }
+
+    /* ── Send to Claude box ── */
+    #claude-output-section {
+      max-width: 640px;
+      margin: 20px auto 0;
+      display: none;
+    }
+
+    #claude-output-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    #claude-output-section p {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    #send-email-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: #2d6a4f;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.2s;
+      box-shadow: 0 4px 12px rgba(45,106,79,0.3);
+    }
+
+    #send-email-btn:hover { background: #1b4332; }
+
+    .email-note {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #888;
+      text-align: center;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.78rem;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🛒 Grocery Meal Picker</h1>
+  <p>Select your meals for the week and let Claude shop Safeway for you.</p>
+</header>
+
+<!-- ── Step 1: Load from Google Sheet ── -->
+<div id="config-panel">
+  <h2>📋 Step 1 — Connect your Meal Plan</h2>
+  <label for="sheet-url">Google Sheet CSV Export URL</label>
+  <input type="text" id="sheet-url" placeholder="Paste your Google Sheet CSV URL here…" />
+  <button id="load-btn" onclick="loadSheet()">Load Meals from Sheet</button>
+  <p style="margin-top:10px;font-size:0.78rem;color:#888;">
+    <strong>How to get this URL:</strong> In Google Sheets → File → Share → Publish to web → select your sheet → CSV → Copy link.
+  </p>
+</div>
+
+<div id="status-bar"></div>
+
+<!-- ── Step 2: Select Meals ── -->
+<div id="meal-section">
+  <h2>🍽️ Step 2 — Choose Your Meals</h2>
+
+  <div class="controls">
+    <button onclick="selectAll()">✅ Select All</button>
+    <button onclick="clearAll()">✖ Clear All</button>
+    <button id="shop-btn" onclick="generateShoppingList()" disabled>
+      🛒 Generate Shopping List
+    </button>
+  </div>
+
+  <div id="meal-grid"></div>
+</div>
+
+<!-- ── Step 3: Preview Ingredients ── -->
+<div id="preview-section">
+  <h2>🥦 Step 3 — Ingredient Preview</h2>
+  <div id="ingredient-list"></div>
+</div>
+
+<!-- ── Step 4: Send to Claude ── -->
+<div id="claude-output-section">
+  <h2>🤖 Step 4 — Start Shopping</h2>
+  <p>Tap the button below. Your mail app will open with everything pre-filled — just hit <strong>Send</strong>. Claude will shop Safeway automatically and email you a summary when done.</p>
+  <a id="send-email-btn" href="#">📧 Send Shopping List to Claude</a>
+  <p class="email-note">Opens your mail app · Sends to DashAndClaude@gmail.com · Takes ~2 minutes</p>
+</div>
+
+<footer>Grocery Shopping Automation · Powered by Claude</footer>
+
+<script>
+  // ── State ──
+  let allData    = [];   // raw rows from sheet
+  let meals      = {};   // { mealName: [ {ingredient, qty, unit, brand}, ... ] }
+  let selected   = new Set();
+
+  // ── CORS proxies (tried in order until one works) ──
+  const PROXIES = [
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://cors-anywhere.herokuapp.com/${url}`,
+  ];
+
+  async function fetchWithProxy(url) {
+    // First try direct (works if sheet is already CORS-friendly or app is served)
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (r.ok) return await r.text();
+    } catch (_) { /* fall through to proxies */ }
+
+    // Try each proxy in turn
+    for (const proxy of PROXIES) {
+      try {
+        const r = await fetch(proxy(url), { cache: 'no-store' });
+        if (r.ok) {
+          const text = await r.text();
+          if (text && text.length > 10) return text;
+        }
+      } catch (_) { continue; }
+    }
+    throw new Error('Could not load the sheet. Make sure it is published as CSV (File → Share → Publish to web → CSV) and the URL is correct.');
+  }
+
+  // ── Load Google Sheet ──
+  async function loadSheet() {
+    const url = document.getElementById('sheet-url').value.trim();
+    if (!url) { showStatus('Please paste your Google Sheet CSV URL first.', 'error'); return; }
+
+    showStatus('Loading your meal plan…', 'info');
+    const btn = document.getElementById('load-btn');
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+
+    try {
+      const text = await fetchWithProxy(url);
+      parseCSV(text);
+      if (Object.keys(meals).length === 0) throw new Error('No meals found. Check that your column headers are: Meal Name, Ingredient Name, Quantity, Unit, Preferred Brand');
+      renderMeals();
+      localStorage.setItem('grocery_sheet_url', url);
+      showStatus(`✓ Loaded ${Object.keys(meals).length} meals with ${allData.length} total ingredient rows.`, 'ok');
+      document.getElementById('meal-section').style.display = 'block';
+    } catch (err) {
+      showStatus('❌ ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Load Meals from Sheet';
+    }
+  }
+
+  // ── Parse CSV ──
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g,'_').replace(/['"]/g,''));
+
+    // Expected headers (flexible): meal_name, ingredient_name, quantity, unit, preferred_brand
+    const colMeal  = findCol(headers, ['meal_name','meal','dish']);
+    const colIng   = findCol(headers, ['ingredient_name','ingredient']);
+    const colQty   = findCol(headers, ['quantity','qty','amount']);
+    const colUnit  = findCol(headers, ['unit','units']);
+    const colBrand = findCol(headers, ['preferred_brand','brand']);
+
+    if (colMeal === -1 || colIng === -1) {
+      throw new Error('Sheet must have "Meal Name" and "Ingredient Name" columns. Check your column headers.');
+    }
+
+    meals   = {};
+    allData = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCSVLine(lines[i]);
+      if (!cols || cols.length < 2) continue;
+
+      const meal  = (cols[colMeal]  || '').trim();
+      const ing   = (cols[colIng]   || '').trim();
+      const qty   = colQty   !== -1 ? (cols[colQty]   || '').trim() : '';
+      const unit  = colUnit  !== -1 ? (cols[colUnit]  || '').trim() : '';
+      const brand = colBrand !== -1 ? (cols[colBrand] || '').trim() : '';
+
+      if (!meal || !ing) continue;
+
+      if (!meals[meal]) meals[meal] = [];
+      meals[meal].push({ ingredient: ing, qty, unit, brand });
+      allData.push({ meal, ingredient: ing, qty, unit, brand });
+    }
+  }
+
+  function findCol(headers, candidates) {
+    for (const c of candidates) {
+      const idx = headers.indexOf(c);
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  }
+
+  function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
+      else { current += ch; }
+    }
+    result.push(current);
+    return result;
+  }
+
+  // ── Render meal cards ──
+  function renderMeals() {
+    const grid = document.getElementById('meal-grid');
+    grid.innerHTML = '';
+    selected.clear();
+    updateShopBtn();
+
+    for (const mealName of Object.keys(meals)) {
+      const count = meals[mealName].length;
+      const card  = document.createElement('div');
+      card.className = 'meal-card';
+      card.dataset.meal = mealName;
+      card.innerHTML = `
+        <span class="check">✅</span>
+        <div class="meal-name">${escHtml(mealName)}</div>
+        <div class="meal-meta">${count} ingredient${count !== 1 ? 's' : ''}</div>
+      `;
+      card.addEventListener('click', () => toggleMeal(mealName, card));
+      grid.appendChild(card);
+    }
+  }
+
+  function toggleMeal(name, card) {
+    if (selected.has(name)) { selected.delete(name); card.classList.remove('selected'); }
+    else                     { selected.add(name);    card.classList.add('selected');    }
+    updateShopBtn();
+  }
+
+  function selectAll() {
+    document.querySelectorAll('.meal-card').forEach(c => {
+      selected.add(c.dataset.meal);
+      c.classList.add('selected');
+    });
+    updateShopBtn();
+  }
+
+  function clearAll() {
+    selected.clear();
+    document.querySelectorAll('.meal-card').forEach(c => c.classList.remove('selected'));
+    updateShopBtn();
+    document.getElementById('preview-section').style.display = 'none';
+    document.getElementById('claude-output-section').style.display = 'none';
+  }
+
+  function updateShopBtn() {
+    const btn = document.getElementById('shop-btn');
+    btn.disabled = selected.size === 0;
+    btn.textContent = selected.size === 0
+      ? '🛒 Generate Shopping List'
+      : `🛒 Generate Shopping List (${selected.size} meal${selected.size !== 1 ? 's' : ''})`;
+  }
+
+  // ── Generate shopping list & build mailto email ──
+  function generateShoppingList() {
+    // Aggregate ingredients across selected meals (deduplicate by ingredient+brand)
+    const ingMap = {};
+
+    for (const mealName of selected) {
+      for (const row of meals[mealName]) {
+        const key = `${row.ingredient.toLowerCase()}|${row.brand.toLowerCase()}`;
+        if (!ingMap[key]) {
+          ingMap[key] = { ...row, meals: [mealName], totalQty: parseFloat(row.qty) || null };
+        } else {
+          ingMap[key].meals.push(mealName);
+          if (ingMap[key].totalQty !== null && parseFloat(row.qty)) {
+            ingMap[key].totalQty += parseFloat(row.qty);
+          }
+        }
+      }
+    }
+
+    // Render ingredient preview grouped by meal
+    const listEl = document.getElementById('ingredient-list');
+    listEl.innerHTML = '';
+
+    for (const mealName of selected) {
+      const header = document.createElement('div');
+      header.className = 'meal-group-header';
+      header.textContent = mealName;
+      listEl.appendChild(header);
+
+      for (const row of meals[mealName]) {
+        const r = document.createElement('div');
+        r.className = 'ingredient-row';
+        const qtyStr = row.qty ? `${row.qty}${row.unit ? ' ' + row.unit : ''}` : '';
+        r.innerHTML = `
+          <span class="ing-name">${escHtml(row.ingredient)}</span>
+          <span>
+            <span class="ing-qty">${escHtml(qtyStr)}</span>
+            ${row.brand ? `<br/><span class="ing-brand">${escHtml(row.brand)}</span>` : ''}
+          </span>
+        `;
+        listEl.appendChild(r);
+      }
+    }
+
+    document.getElementById('preview-section').style.display = 'block';
+
+    // Build structured email body that the shopping script will parse
+    const mealList = Array.from(selected).join(', ');
+    const rows = Object.values(ingMap);
+
+    const bodyLines = [];
+    bodyLines.push('MEALS: ' + mealList);
+    bodyLines.push('');
+    bodyLines.push('INGREDIENTS:');
+    rows.forEach((row, i) => {
+      const qty = row.totalQty !== null ? row.totalQty : (row.qty || '');
+      const parts = [`${i+1}. ${row.ingredient}`];
+      if (qty)       parts.push(`qty:${qty}`);
+      if (row.unit)  parts.push(`unit:${row.unit}`);
+      if (row.brand) parts.push(`brand:${row.brand}`);
+      bodyLines.push(parts.join(' | '));
+    });
+    bodyLines.push('');
+    bodyLines.push('---');
+    bodyLines.push('Sent from Grocery Meal Picker');
+
+    const subject = 'Shop Groceries';
+    const body    = bodyLines.join('\n');
+    const mailto  = `mailto:DashAndClaude@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    document.getElementById('send-email-btn').href = mailto;
+    document.getElementById('claude-output-section').style.display = 'block';
+    document.getElementById('claude-output-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── Helpers ──
+  function showStatus(msg, type) {
+    const el = document.getElementById('status-bar');
+    el.textContent = msg;
+    el.className = type;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Pre-fill URL if stored in localStorage ──
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('grocery_sheet_url');
+    if (saved) document.getElementById('sheet-url').value = saved;
+  });
+
+  document.getElementById('sheet-url').addEventListener('change', () => {
+    localStorage.setItem('grocery_sheet_url', document.getElementById('sheet-url').value.trim());
+  });
+</script>
+</body>
+</html>
