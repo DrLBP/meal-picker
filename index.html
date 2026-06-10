@@ -15,9 +15,11 @@
       padding: 24px 16px;
     }
 
+    /* ── Header ── */
     header {
       text-align: center;
       margin-bottom: 28px;
+      position: relative;
     }
 
     header h1 {
@@ -32,7 +34,24 @@
       font-size: 0.95rem;
     }
 
-    /* ── Config Panel ── */
+    #settings-btn {
+      position: absolute;
+      top: 4px;
+      right: 0;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: #aaa;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+      line-height: 1;
+    }
+
+    #settings-btn:hover { color: #2d6a4f; background: #e8f5ee; }
+
+    /* ── Settings Panel (hidden by default) ── */
     #config-panel {
       background: #fff;
       border-radius: 12px;
@@ -40,6 +59,7 @@
       max-width: 640px;
       margin: 0 auto 24px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: none;
     }
 
     #config-panel h2 {
@@ -71,7 +91,13 @@
       box-shadow: 0 0 0 3px rgba(45,106,79,0.15);
     }
 
+    .panel-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
     #load-btn {
+      flex: 1;
       background: #2d6a4f;
       color: white;
       border: none;
@@ -80,12 +106,24 @@
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      width: 100%;
       transition: background 0.2s;
     }
 
     #load-btn:hover { background: #1b4332; }
     #load-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+    #close-settings-btn {
+      background: #f0f0f0;
+      color: #555;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #close-settings-btn:hover { background: #e0e0e0; }
 
     /* ── Status bar ── */
     #status-bar {
@@ -117,7 +155,7 @@
 
     #meal-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
       gap: 12px;
       margin-bottom: 20px;
     }
@@ -243,11 +281,11 @@
 
     .ingredient-row:last-child { border-bottom: none; }
 
-    .ing-name { color: #333; }
-    .ing-qty  { color: #666; font-size: 0.82rem; text-align: right; }
-    .ing-brand{ color: #999; font-size: 0.78rem; font-style: italic; }
+    .ing-name  { color: #333; }
+    .ing-qty   { color: #666; font-size: 0.82rem; text-align: right; }
+    .ing-brand { color: #999; font-size: 0.78rem; font-style: italic; }
 
-    /* ── Send to Claude box ── */
+    /* ── Send to Claude ── */
     #claude-output-section {
       max-width: 640px;
       margin: 20px auto 0;
@@ -306,24 +344,28 @@
 <header>
   <h1>🛒 Grocery Meal Picker</h1>
   <p>Select your meals for the week and let Claude shop Safeway for you.</p>
+  <button id="settings-btn" onclick="toggleSettings()" title="Change Google Sheet">⚙️</button>
 </header>
 
-<!-- ── Step 1: Load from Google Sheet ── -->
+<!-- ── Settings Panel (hidden unless gear is tapped) ── -->
 <div id="config-panel">
-  <h2>📋 Step 1 — Connect your Meal Plan</h2>
+  <h2>⚙️ Settings — Google Sheet URL</h2>
   <label for="sheet-url">Google Sheet CSV Export URL</label>
   <input type="text" id="sheet-url" placeholder="Paste your Google Sheet CSV URL here…" />
-  <button id="load-btn" onclick="loadSheet()">Load Meals from Sheet</button>
-  <p style="margin-top:10px;font-size:0.78rem;color:#888;">
-    <strong>How to get this URL:</strong> In Google Sheets → File → Share → Publish to web → select your sheet → CSV → Copy link.
+  <p style="font-size:0.78rem;color:#888;margin-bottom:12px;">
+    In Google Sheets → File → Share → Publish to web → CSV → Copy link.
   </p>
+  <div class="panel-buttons">
+    <button id="load-btn" onclick="saveAndReload()">Save & Reload Meals</button>
+    <button id="close-settings-btn" onclick="toggleSettings()">Cancel</button>
+  </div>
 </div>
 
 <div id="status-bar"></div>
 
-<!-- ── Step 2: Select Meals ── -->
+<!-- ── Meal Selection ── -->
 <div id="meal-section">
-  <h2>🍽️ Step 2 — Choose Your Meals</h2>
+  <h2>🍽️ Choose Your Meals</h2>
 
   <div class="controls">
     <button onclick="selectAll()">✅ Select All</button>
@@ -336,15 +378,15 @@
   <div id="meal-grid"></div>
 </div>
 
-<!-- ── Step 3: Preview Ingredients ── -->
+<!-- ── Ingredient Preview ── -->
 <div id="preview-section">
-  <h2>🥦 Step 3 — Ingredient Preview</h2>
+  <h2>🥦 Ingredient Preview</h2>
   <div id="ingredient-list"></div>
 </div>
 
-<!-- ── Step 4: Send to Claude ── -->
+<!-- ── Send to Claude ── -->
 <div id="claude-output-section">
-  <h2>🤖 Step 4 — Start Shopping</h2>
+  <h2>🤖 Start Shopping</h2>
   <p>Tap the button below. Your mail app will open with everything pre-filled — just hit <strong>Send</strong>. Claude will shop Safeway automatically and email you a summary when done.</p>
   <a id="send-email-btn" href="#">📧 Send Shopping List to Claude</a>
   <p class="email-note">Opens your mail app · Sends to DashAndClaude@gmail.com · Takes ~2 minutes</p>
@@ -353,26 +395,52 @@
 <footer>Grocery Shopping Automation · Powered by Claude</footer>
 
 <script>
-  // ── State ──
-  let allData    = [];   // raw rows from sheet
-  let meals      = {};   // { mealName: [ {ingredient, qty, unit, brand}, ... ] }
-  let selected   = new Set();
+  // ─────────────────────────────────────────────
+  // DEFAULT SHEET URL — change this if you ever
+  // switch to a new Google Sheet permanently.
+  // ─────────────────────────────────────────────
+  const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwdekVm37v50DhP_0o92PUOLtlv5eaE-XQx4kWnF1ffa3WyQCD8WMZDP-QwvytykPsokJFprC70nJ9/pub?gid=0&single=true&output=csv';
 
-  // ── CORS proxies (tried in order until one works) ──
+  // ── State ──
+  let allData = [];
+  let meals   = {};
+  let selected = new Set();
+
+  // ── Settings panel toggle ──
+  function toggleSettings() {
+    const panel = document.getElementById('config-panel');
+    const open  = panel.style.display === 'block';
+    panel.style.display = open ? 'none' : 'block';
+    if (!open) {
+      // Pre-fill with the currently active URL when opening
+      document.getElementById('sheet-url').value = getCurrentUrl();
+    }
+  }
+
+  function getCurrentUrl() {
+    return localStorage.getItem('grocery_sheet_url') || DEFAULT_SHEET_URL;
+  }
+
+  function saveAndReload() {
+    const url = document.getElementById('sheet-url').value.trim();
+    if (!url) { showStatus('Please enter a URL first.', 'error'); return; }
+    localStorage.setItem('grocery_sheet_url', url);
+    document.getElementById('config-panel').style.display = 'none';
+    loadSheet(url);
+  }
+
+  // ── CORS proxies ──
   const PROXIES = [
     url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
     url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    url => `https://cors-anywhere.herokuapp.com/${url}`,
   ];
 
   async function fetchWithProxy(url) {
-    // First try direct (works if sheet is already CORS-friendly or app is served)
     try {
       const r = await fetch(url, { cache: 'no-store' });
       if (r.ok) return await r.text();
-    } catch (_) { /* fall through to proxies */ }
+    } catch (_) {}
 
-    // Try each proxy in turn
     for (const proxy of PROXIES) {
       try {
         const r = await fetch(proxy(url), { cache: 'no-store' });
@@ -382,50 +450,46 @@
         }
       } catch (_) { continue; }
     }
-    throw new Error('Could not load the sheet. Make sure it is published as CSV (File → Share → Publish to web → CSV) and the URL is correct.');
+    throw new Error('Could not load the sheet. Tap ⚙️ to check your URL.');
   }
 
-  // ── Load Google Sheet ──
-  async function loadSheet() {
-    const url = document.getElementById('sheet-url').value.trim();
-    if (!url) { showStatus('Please paste your Google Sheet CSV URL first.', 'error'); return; }
-
+  // ── Load sheet ──
+  async function loadSheet(url) {
+    url = url || getCurrentUrl();
     showStatus('Loading your meal plan…', 'info');
-    const btn = document.getElementById('load-btn');
-    btn.disabled = true;
-    btn.textContent = 'Loading…';
 
     try {
       const text = await fetchWithProxy(url);
       parseCSV(text);
-      if (Object.keys(meals).length === 0) throw new Error('No meals found. Check that your column headers are: Meal Name, Ingredient Name, Quantity, Unit, Preferred Brand');
+      if (Object.keys(meals).length === 0)
+        throw new Error('No meals found. Tap ⚙️ and check your column headers: Meal Name, Ingredient Name, Quantity, Unit, Preferred Brand');
       renderMeals();
-      localStorage.setItem('grocery_sheet_url', url);
-      showStatus(`✓ Loaded ${Object.keys(meals).length} meals with ${allData.length} total ingredient rows.`, 'ok');
       document.getElementById('meal-section').style.display = 'block';
+      showStatus(`✓ ${Object.keys(meals).length} meals loaded.`, 'ok');
+      setTimeout(() => {
+        const bar = document.getElementById('status-bar');
+        bar.style.display = 'none';
+      }, 2000);
     } catch (err) {
       showStatus('❌ ' + err.message, 'error');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Load Meals from Sheet';
     }
   }
 
   // ── Parse CSV ──
   function parseCSV(text) {
     const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g,'_').replace(/['"]/g,''));
+    const headers = lines[0].split(',').map(h =>
+      h.trim().toLowerCase().replace(/\s+/g,'_').replace(/['"]/g,'')
+    );
 
-    // Expected headers (flexible): meal_name, ingredient_name, quantity, unit, preferred_brand
     const colMeal  = findCol(headers, ['meal_name','meal','dish']);
     const colIng   = findCol(headers, ['ingredient_name','ingredient']);
     const colQty   = findCol(headers, ['quantity','qty','amount']);
     const colUnit  = findCol(headers, ['unit','units']);
     const colBrand = findCol(headers, ['preferred_brand','brand']);
 
-    if (colMeal === -1 || colIng === -1) {
-      throw new Error('Sheet must have "Meal Name" and "Ingredient Name" columns. Check your column headers.');
-    }
+    if (colMeal === -1 || colIng === -1)
+      throw new Error('Sheet must have "Meal Name" and "Ingredient Name" columns.');
 
     meals   = {};
     allData = [];
@@ -441,7 +505,6 @@
       const brand = colBrand !== -1 ? (cols[colBrand] || '').trim() : '';
 
       if (!meal || !ing) continue;
-
       if (!meals[meal]) meals[meal] = [];
       meals[meal].push({ ingredient: ing, qty, unit, brand });
       allData.push({ meal, ingredient: ing, qty, unit, brand });
@@ -458,8 +521,7 @@
 
   function parseCSVLine(line) {
     const result = [];
-    let current = '';
-    let inQuotes = false;
+    let current = '', inQuotes = false;
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
       if (ch === '"') { inQuotes = !inQuotes; }
@@ -476,6 +538,8 @@
     grid.innerHTML = '';
     selected.clear();
     updateShopBtn();
+    document.getElementById('preview-section').style.display = 'none';
+    document.getElementById('claude-output-section').style.display = 'none';
 
     for (const mealName of Object.keys(meals)) {
       const count = meals[mealName].length;
@@ -494,7 +558,7 @@
 
   function toggleMeal(name, card) {
     if (selected.has(name)) { selected.delete(name); card.classList.remove('selected'); }
-    else                     { selected.add(name);    card.classList.add('selected');    }
+    else                     { selected.add(name);    card.classList.add('selected'); }
     updateShopBtn();
   }
 
@@ -522,35 +586,29 @@
       : `🛒 Generate Shopping List (${selected.size} meal${selected.size !== 1 ? 's' : ''})`;
   }
 
-  // ── Generate shopping list & build mailto email ──
+  // ── Generate shopping list & mailto ──
   function generateShoppingList() {
-    // Aggregate ingredients across selected meals (deduplicate by ingredient+brand)
     const ingMap = {};
-
     for (const mealName of selected) {
       for (const row of meals[mealName]) {
         const key = `${row.ingredient.toLowerCase()}|${row.brand.toLowerCase()}`;
         if (!ingMap[key]) {
-          ingMap[key] = { ...row, meals: [mealName], totalQty: parseFloat(row.qty) || null };
+          ingMap[key] = { ...row, totalQty: parseFloat(row.qty) || null };
         } else {
-          ingMap[key].meals.push(mealName);
-          if (ingMap[key].totalQty !== null && parseFloat(row.qty)) {
+          if (ingMap[key].totalQty !== null && parseFloat(row.qty))
             ingMap[key].totalQty += parseFloat(row.qty);
-          }
         }
       }
     }
 
-    // Render ingredient preview grouped by meal
+    // Render ingredient preview
     const listEl = document.getElementById('ingredient-list');
     listEl.innerHTML = '';
-
     for (const mealName of selected) {
-      const header = document.createElement('div');
-      header.className = 'meal-group-header';
-      header.textContent = mealName;
-      listEl.appendChild(header);
-
+      const hdr = document.createElement('div');
+      hdr.className = 'meal-group-header';
+      hdr.textContent = mealName;
+      listEl.appendChild(hdr);
       for (const row of meals[mealName]) {
         const r = document.createElement('div');
         r.className = 'ingredient-row';
@@ -560,38 +618,27 @@
           <span>
             <span class="ing-qty">${escHtml(qtyStr)}</span>
             ${row.brand ? `<br/><span class="ing-brand">${escHtml(row.brand)}</span>` : ''}
-          </span>
-        `;
+          </span>`;
         listEl.appendChild(r);
       }
     }
-
     document.getElementById('preview-section').style.display = 'block';
 
-    // Build structured email body that the shopping script will parse
+    // Build email
     const mealList = Array.from(selected).join(', ');
     const rows = Object.values(ingMap);
-
-    const bodyLines = [];
-    bodyLines.push('MEALS: ' + mealList);
-    bodyLines.push('');
-    bodyLines.push('INGREDIENTS:');
+    const bodyLines = ['MEALS: ' + mealList, '', 'INGREDIENTS:'];
     rows.forEach((row, i) => {
-      const qty = row.totalQty !== null ? row.totalQty : (row.qty || '');
+      const qty   = row.totalQty !== null ? row.totalQty : (row.qty || '');
       const parts = [`${i+1}. ${row.ingredient}`];
       if (qty)       parts.push(`qty:${qty}`);
       if (row.unit)  parts.push(`unit:${row.unit}`);
       if (row.brand) parts.push(`brand:${row.brand}`);
       bodyLines.push(parts.join(' | '));
     });
-    bodyLines.push('');
-    bodyLines.push('---');
-    bodyLines.push('Sent from Grocery Meal Picker');
+    bodyLines.push('', '---', 'Sent from Grocery Meal Picker');
 
-    const subject = 'Shop Groceries';
-    const body    = bodyLines.join('\n');
-    const mailto  = `mailto:DashAndClaude@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
+    const mailto = `mailto:DashAndClaude@gmail.com?subject=${encodeURIComponent('Shop Groceries')}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
     document.getElementById('send-email-btn').href = mailto;
     document.getElementById('claude-output-section').style.display = 'block';
     document.getElementById('claude-output-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -605,17 +652,14 @@
   }
 
   function escHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // ── Pre-fill URL if stored in localStorage ──
+  // ── Auto-load on page open ──
   window.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('grocery_sheet_url');
-    if (saved) document.getElementById('sheet-url').value = saved;
-  });
-
-  document.getElementById('sheet-url').addEventListener('change', () => {
-    localStorage.setItem('grocery_sheet_url', document.getElementById('sheet-url').value.trim());
+    loadSheet(getCurrentUrl());
   });
 </script>
 </body>
