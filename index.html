@@ -3,269 +3,381 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🛒 Grocery Meal Picker</title>
+  <title>Grocery Meal Picker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f0f4f8;
-      color: #1a202c;
+      font-family: 'Barlow', sans-serif;
+      background: #FEF9EF;
+      color: #343434;
       min-height: 100vh;
-      padding: 24px 16px;
     }
 
     /* ── Header ── */
     header {
-      text-align: center;
-      margin-bottom: 28px;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 52px 24px 36px;
+      border-bottom: 2.5px solid #343434;
       position: relative;
     }
 
-    header h1 {
-      font-size: 1.9rem;
+    .header-eyebrow {
+      font-size: 12px;
       font-weight: 700;
-      color: #2d6a4f;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #067A45;
+      margin-bottom: 12px;
     }
 
+    header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: clamp(44px, 7vw, 72px);
+      line-height: 0.95;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+      color: #343434;
+    }
+
+    header h1 .green { color: #067A45; }
+
     header p {
-      color: #555;
-      margin-top: 6px;
-      font-size: 0.95rem;
+      margin-top: 16px;
+      font-size: 15px;
+      color: #666;
+      max-width: 400px;
+      line-height: 1.6;
     }
 
     #settings-btn {
       position: absolute;
-      top: 4px;
-      right: 0;
+      top: 52px;
+      right: 24px;
       background: none;
-      border: none;
-      font-size: 1.4rem;
+      border: 2px solid #E8E0D0;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Barlow', sans-serif;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
       cursor: pointer;
-      color: #aaa;
-      padding: 4px 8px;
-      border-radius: 8px;
-      transition: color 0.2s, background 0.2s;
-      line-height: 1;
+      color: #888;
+      padding: 7px 14px;
+      transition: all 0.15s;
     }
 
-    #settings-btn:hover { color: #2d6a4f; background: #e8f5ee; }
+    #settings-btn:hover {
+      color: #343434;
+      border-color: #343434;
+    }
 
-    /* ── Settings Panel (hidden by default) ── */
+    /* ── Settings Panel ── */
     #config-panel {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 24px;
       background: #fff;
-      border-radius: 12px;
-      padding: 20px 24px;
-      max-width: 640px;
-      margin: 0 auto 24px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-bottom: 2px solid #E8E0D0;
       display: none;
     }
 
     #config-panel h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #2d6a4f;
-      margin-bottom: 10px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      text-transform: uppercase;
+      color: #343434;
+      margin-bottom: 14px;
     }
 
     #config-panel label {
       display: block;
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 6px;
     }
 
     #config-panel input {
       width: 100%;
-      padding: 9px 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      margin-bottom: 12px;
+      padding: 11px 14px;
+      border: 2px solid #E8E0D0;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'Barlow', sans-serif;
+      margin-bottom: 14px;
+      color: #343434;
+      background: #FEF9EF;
+      transition: border-color 0.15s;
     }
 
     #config-panel input:focus {
       outline: none;
-      border-color: #2d6a4f;
-      box-shadow: 0 0 0 3px rgba(45,106,79,0.15);
+      border-color: #343434;
+    }
+
+    #config-panel p.hint {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 14px;
+      line-height: 1.5;
     }
 
     .panel-buttons {
       display: flex;
-      gap: 8px;
+      gap: 10px;
     }
 
     #load-btn {
-      flex: 1;
-      background: #2d6a4f;
-      color: white;
+      background: #343434;
+      color: #fff;
       border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
+      padding: 11px 24px;
+      border-radius: 4px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.15s;
     }
 
-    #load-btn:hover { background: #1b4332; }
-    #load-btn:disabled { background: #aaa; cursor: not-allowed; }
+    #load-btn:hover { background: #067A45; }
+    #load-btn:disabled { background: #C8BFB0; cursor: not-allowed; }
 
     #close-settings-btn {
-      background: #f0f0f0;
-      color: #555;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    #close-settings-btn:hover { background: #e0e0e0; }
-
-    /* ── Status bar ── */
-    #status-bar {
-      max-width: 640px;
-      margin: 0 auto 16px;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      display: none;
-    }
-
-    #status-bar.info  { background: #e8f4fd; color: #1a6496; display: block; }
-    #status-bar.error { background: #fde8e8; color: #c0392b; display: block; }
-    #status-bar.ok    { background: #e8f8ed; color: #1e7e34; display: block; }
-
-    /* ── Meal Grid ── */
-    #meal-section {
-      max-width: 640px;
-      margin: 0 auto;
-      display: none;
-    }
-
-    #meal-section h2 {
-      font-size: 1rem;
+      background: none;
+      border: 2px solid #E8E0D0;
+      color: #888;
+      padding: 11px 18px;
+      border-radius: 4px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 14px;
       font-weight: 600;
-      color: #333;
-      margin-bottom: 14px;
-    }
-
-    #meal-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .meal-card {
-      background: #fff;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 14px 16px;
-      cursor: pointer;
-      transition: all 0.18s;
-      user-select: none;
-    }
-
-    .meal-card:hover {
-      border-color: #2d6a4f;
-      box-shadow: 0 2px 8px rgba(45,106,79,0.15);
-    }
-
-    .meal-card.selected {
-      border-color: #2d6a4f;
-      background: #e8f5ee;
-    }
-
-    .meal-card .meal-name {
-      font-weight: 600;
-      font-size: 0.92rem;
-      color: #1a202c;
-    }
-
-    .meal-card .meal-meta {
-      font-size: 0.78rem;
-      color: #777;
-      margin-top: 4px;
-    }
-
-    .meal-card .check {
-      float: right;
-      font-size: 1.1rem;
-      opacity: 0;
-      transition: opacity 0.15s;
-    }
-
-    .meal-card.selected .check { opacity: 1; }
-
-    /* ── Controls ── */
-    .controls {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-
-    .controls button {
-      flex: 1;
-      min-width: 120px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      background: #fff;
-      font-size: 0.88rem;
       cursor: pointer;
       transition: all 0.15s;
     }
 
-    .controls button:hover { background: #f0f4f8; }
+    #close-settings-btn:hover { border-color: #343434; color: #343434; }
 
-    #shop-btn {
-      background: #2d6a4f !important;
-      color: white !important;
-      border-color: #2d6a4f !important;
-      font-weight: 700;
-      font-size: 1rem !important;
+    /* ── Status bar ── */
+    #status-bar {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
     }
 
-    #shop-btn:hover { background: #1b4332 !important; }
-    #shop-btn:disabled { background: #aaa !important; border-color: #aaa !important; cursor: not-allowed; }
+    #status-bar.info  { background: #E8F4FD; color: #1a6496; display: block; }
+    #status-bar.error { background: #FDE8E8; color: #c0392b; display: block; }
+    #status-bar.ok    { background: #E8F5EE; color: #067A45; display: block; }
+
+    /* ── Main content ── */
+    #meal-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 36px 24px 0;
+      display: none;
+    }
+
+    /* ── Controls bar ── */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .controls-left {
+      display: flex;
+      gap: 10px;
+    }
+
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-outline {
+      background: none;
+      border: 2px solid #343434;
+      border-radius: 4px;
+      padding: 8px 18px;
+      font-family: 'Barlow', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      color: #343434;
+      transition: all 0.15s;
+    }
+
+    .btn-outline:hover { background: #343434; color: #fff; }
+
+    .btn-outline.muted {
+      border-color: #C8BFB0;
+      color: #888;
+    }
+
+    .btn-outline.muted:hover { background: #E8E0D0; color: #343434; border-color: #E8E0D0; }
+
+    #shop-btn {
+      background: #343434;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 28px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    #shop-btn:hover { background: #067A45; }
+    #shop-btn:disabled { background: #C8BFB0; cursor: not-allowed; }
+
+    #selected-count {
+      font-size: 14px;
+      font-weight: 600;
+      color: #067A45;
+      display: none;
+    }
+
+    /* ── Meal Grid ── */
+    #meal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+
+    .meal-card {
+      background: #fff;
+      border: 2.5px solid #E8E0D0;
+      border-radius: 6px;
+      padding: 20px 22px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .meal-card:hover {
+      border-color: #343434;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    }
+
+    .meal-card.selected {
+      border-color: #067A45;
+      background: #067A45;
+      box-shadow: 0 4px 16px rgba(6,122,69,0.2);
+    }
+
+    .meal-card .check-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .meal-card.selected .check-badge { opacity: 1; }
+
+    .meal-card .meal-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #067A45;
+      transition: color 0.15s;
+    }
+
+    .meal-card.selected .meal-tag { color: rgba(255,255,255,0.7); }
+
+    .meal-card .meal-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      text-transform: uppercase;
+      line-height: 1.05;
+      color: #343434;
+      transition: color 0.15s;
+    }
+
+    .meal-card.selected .meal-name { color: #fff; }
+
+    .meal-card .meal-meta {
+      font-size: 13px;
+      color: #999;
+      margin-top: 2px;
+      transition: color 0.15s;
+    }
+
+    .meal-card.selected .meal-meta { color: rgba(255,255,255,0.7); }
 
     /* ── Ingredient Preview ── */
     #preview-section {
-      max-width: 640px;
-      margin: 20px auto 0;
+      max-width: 900px;
+      margin: 0 auto 0;
+      padding: 0 24px;
       display: none;
     }
 
     #preview-section h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 12px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 32px;
+      text-transform: uppercase;
+      color: #343434;
+      margin-bottom: 16px;
     }
 
     #ingredient-list {
       background: #fff;
-      border-radius: 12px;
-      padding: 16px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      max-height: 300px;
+      border: 2px solid #E8E0D0;
+      border-radius: 6px;
+      padding: 20px 24px;
+      max-height: 340px;
       overflow-y: auto;
     }
 
     .meal-group-header {
-      font-size: 0.82rem;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #2d6a4f;
-      margin: 12px 0 6px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid #e8f5ee;
+      letter-spacing: 0.12em;
+      color: #067A45;
+      margin: 16px 0 8px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #E8F5EE;
     }
 
     .meal-group-header:first-child { margin-top: 0; }
@@ -274,130 +386,161 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 5px 0;
-      font-size: 0.88rem;
-      border-bottom: 1px solid #f5f5f5;
+      padding: 7px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #F5F0E8;
     }
 
     .ingredient-row:last-child { border-bottom: none; }
 
-    .ing-name  { color: #333; }
-    .ing-qty   { color: #666; font-size: 0.82rem; text-align: right; }
-    .ing-brand { color: #999; font-size: 0.78rem; font-style: italic; }
+    .ing-name  { color: #343434; font-weight: 500; }
+    .ing-qty   { color: #888; font-size: 13px; text-align: right; }
+    .ing-brand { color: #aaa; font-size: 12px; font-style: italic; }
 
     /* ── Send to Claude ── */
     #claude-output-section {
-      max-width: 640px;
-      margin: 20px auto 0;
+      max-width: 900px;
+      margin: 32px auto 0;
+      padding: 0 24px 80px;
       display: none;
     }
 
     #claude-output-section h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #333;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 32px;
+      text-transform: uppercase;
+      color: #343434;
       margin-bottom: 8px;
     }
 
-    #claude-output-section p {
-      font-size: 0.85rem;
+    #claude-output-section .send-desc {
+      font-size: 14px;
       color: #666;
-      margin-bottom: 12px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      max-width: 520px;
     }
 
     #send-email-btn {
-      display: block;
-      width: 100%;
-      padding: 16px;
-      background: #2d6a4f;
-      color: white;
+      display: inline-block;
+      padding: 16px 40px;
+      background: #343434;
+      color: #fff;
       border: none;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 700;
+      border-radius: 4px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
       cursor: pointer;
-      text-align: center;
       text-decoration: none;
-      transition: background 0.2s;
-      box-shadow: 0 4px 12px rgba(45,106,79,0.3);
+      transition: background 0.15s;
     }
 
-    #send-email-btn:hover { background: #1b4332; }
+    #send-email-btn:hover { background: #067A45; }
 
     .email-note {
-      margin-top: 10px;
-      font-size: 0.78rem;
-      color: #888;
-      text-align: center;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #aaa;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Divider ── */
+    .section-divider {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 24px;
+      height: 2px;
+    }
+
+    .section-divider hr {
+      border: none;
+      border-top: 1.5px solid #E8E0D0;
     }
 
     footer {
       text-align: center;
-      margin-top: 40px;
-      font-size: 0.78rem;
-      color: #aaa;
+      padding: 40px 24px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #C8BFB0;
+    }
+
+    /* ── SVG check icon ── */
+    .check-icon {
+      width: 14px;
+      height: 14px;
+      display: block;
     }
   </style>
 </head>
 <body>
 
+<!-- ── Header ── -->
 <header>
-  <h1>🛒 Grocery Meal Picker</h1>
+  <div class="header-eyebrow">Weekly Meal Planner</div>
+  <h1>PICK YOUR <span class="green">MEALS,</span><br>SKIP THE STRESS.</h1>
   <p>Select your meals for the week and let Claude shop Safeway for you.</p>
-  <button id="settings-btn" onclick="toggleSettings()" title="Change Google Sheet">⚙️</button>
+  <button id="settings-btn" onclick="toggleSettings()">Settings</button>
 </header>
 
-<!-- ── Settings Panel (hidden unless gear is tapped) ── -->
+<!-- ── Settings Panel ── -->
 <div id="config-panel">
-  <h2>⚙️ Settings — Google Sheet URL</h2>
+  <h2>Settings — Google Sheet URL</h2>
   <label for="sheet-url">Google Sheet CSV Export URL</label>
   <input type="text" id="sheet-url" placeholder="Paste your Google Sheet CSV URL here…" />
-  <p style="font-size:0.78rem;color:#888;margin-bottom:12px;">
-    In Google Sheets → File → Share → Publish to web → CSV → Copy link.
-  </p>
+  <p class="hint">In Google Sheets → File → Share → Publish to web → CSV → Copy link.</p>
   <div class="panel-buttons">
-    <button id="load-btn" onclick="saveAndReload()">Save & Reload Meals</button>
+    <button id="load-btn" onclick="saveAndReload()">Save &amp; Reload Meals</button>
     <button id="close-settings-btn" onclick="toggleSettings()">Cancel</button>
   </div>
 </div>
 
+<!-- ── Status bar ── -->
 <div id="status-bar"></div>
 
 <!-- ── Meal Selection ── -->
 <div id="meal-section">
-  <h2>🍽️ Choose Your Meals</h2>
-
   <div class="controls">
-    <button onclick="selectAll()">✅ Select All</button>
-    <button onclick="clearAll()">✖ Clear All</button>
-    <button id="shop-btn" onclick="generateShoppingList()" disabled>
-      🛒 Generate Shopping List
-    </button>
+    <div class="controls-left">
+      <button class="btn-outline" onclick="selectAll()">Select All</button>
+      <button class="btn-outline muted" onclick="clearAll()">Clear</button>
+    </div>
+    <div class="controls-right">
+      <span id="selected-count"></span>
+      <button id="shop-btn" onclick="generateShoppingList()" disabled>
+        Build Shopping List →
+      </button>
+    </div>
   </div>
-
   <div id="meal-grid"></div>
 </div>
 
 <!-- ── Ingredient Preview ── -->
 <div id="preview-section">
-  <h2>🥦 Ingredient Preview</h2>
+  <div class="section-divider" style="padding:0;margin:0 auto 24px;max-width:900px;padding:0 24px;"><hr></div>
+  <h2>Ingredient Preview</h2>
   <div id="ingredient-list"></div>
 </div>
 
 <!-- ── Send to Claude ── -->
 <div id="claude-output-section">
-  <h2>🤖 Start Shopping</h2>
-  <p>Tap the button below. Your mail app will open with everything pre-filled — just hit <strong>Send</strong>. Claude will shop Safeway automatically and email you a summary when done.</p>
-  <a id="send-email-btn" href="#">📧 Send Shopping List to Claude</a>
-  <p class="email-note">Opens your mail app · Sends to DashAndClaude@gmail.com · Takes ~2 minutes</p>
+  <div class="section-divider" style="padding:0;margin:0 auto 24px;max-width:900px;padding:0 24px;"><hr></div>
+  <h2>Start Shopping</h2>
+  <p class="send-desc">Tap the button below. Your mail app will open with everything pre-filled — just hit <strong>Send</strong>. Claude will shop Safeway automatically and email you a summary when done.</p>
+  <a id="send-email-btn" href="#">Send Shopping List to Claude</a>
+  <p class="email-note">Opens your mail app · Sends to <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1f5b7e6c775e717b5c737e6a7b7a5f78727e7673317c7072">[email&#160;protected]</a> · Takes ~2 minutes</p>
 </div>
 
 <footer>Grocery Shopping Automation · Powered by Claude</footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   // ─────────────────────────────────────────────
-  // DEFAULT SHEET URL — change this if you ever
-  // switch to a new Google Sheet permanently.
+  // DEFAULT SHEET URL
   // ─────────────────────────────────────────────
   const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwdekVm37v50DhP_0o92PUOLtlv5eaE-XQx4kWnF1ffa3WyQCD8WMZDP-QwvytykPsokJFprC70nJ9/pub?gid=0&single=true&output=csv';
 
@@ -412,7 +555,6 @@
     const open  = panel.style.display === 'block';
     panel.style.display = open ? 'none' : 'block';
     if (!open) {
-      // Pre-fill with the currently active URL when opening
       document.getElementById('sheet-url').value = getCurrentUrl();
     }
   }
@@ -450,7 +592,7 @@
         }
       } catch (_) { continue; }
     }
-    throw new Error('Could not load the sheet. Tap ⚙️ to check your URL.');
+    throw new Error('Could not load the sheet. Click Settings to check your URL.');
   }
 
   // ── Load sheet ──
@@ -462,16 +604,16 @@
       const text = await fetchWithProxy(url);
       parseCSV(text);
       if (Object.keys(meals).length === 0)
-        throw new Error('No meals found. Tap ⚙️ and check your column headers: Meal Name, Ingredient Name, Quantity, Unit, Preferred Brand');
+        throw new Error('No meals found. Click Settings and check your column headers: Meal Name, Ingredient Name, Quantity, Unit, Preferred Brand');
       renderMeals();
       document.getElementById('meal-section').style.display = 'block';
-      showStatus(`✓ ${Object.keys(meals).length} meals loaded.`, 'ok');
+      showStatus('✓ ' + Object.keys(meals).length + ' meals loaded.', 'ok');
       setTimeout(() => {
         const bar = document.getElementById('status-bar');
         bar.style.display = 'none';
-      }, 2000);
+      }, 2500);
     } catch (err) {
-      showStatus('❌ ' + err.message, 'error');
+      showStatus('Error: ' + err.message, 'error');
     }
   }
 
@@ -547,7 +689,12 @@
       card.className = 'meal-card';
       card.dataset.meal = mealName;
       card.innerHTML = `
-        <span class="check">✅</span>
+        <div class="check-badge">
+          <svg class="check-icon" viewBox="0 0 14 14" fill="none">
+            <polyline points="2,7 5.5,10.5 12,3.5" stroke="#067A45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="meal-tag">Dinner</div>
         <div class="meal-name">${escHtml(mealName)}</div>
         <div class="meal-meta">${count} ingredient${count !== 1 ? 's' : ''}</div>
       `;
@@ -580,10 +727,17 @@
 
   function updateShopBtn() {
     const btn = document.getElementById('shop-btn');
+    const countEl = document.getElementById('selected-count');
     btn.disabled = selected.size === 0;
-    btn.textContent = selected.size === 0
-      ? '🛒 Generate Shopping List'
-      : `🛒 Generate Shopping List (${selected.size} meal${selected.size !== 1 ? 's' : ''})`;
+
+    if (selected.size > 0) {
+      btn.textContent = `Build Shopping List (${selected.size}) →`;
+      countEl.textContent = `${selected.size} meal${selected.size !== 1 ? 's' : ''} selected`;
+      countEl.style.display = 'block';
+    } else {
+      btn.textContent = 'Build Shopping List →';
+      countEl.style.display = 'none';
+    }
   }
 
   // ── Generate shopping list & mailto ──
@@ -641,7 +795,11 @@
     const mailto = `mailto:DashAndClaude@gmail.com?subject=${encodeURIComponent('Shop Groceries')}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
     document.getElementById('send-email-btn').href = mailto;
     document.getElementById('claude-output-section').style.display = 'block';
-    document.getElementById('claude-output-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Scroll to send section
+    const sendSection = document.getElementById('claude-output-section');
+    const top = sendSection.getBoundingClientRect().top + window.pageYOffset - 40;
+    window.scrollTo({ top, behavior: 'smooth' });
   }
 
   // ── Helpers ──
