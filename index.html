@@ -808,21 +808,28 @@
   }
 
   // ── Parse pantry CSV ──
+  // pantryBrands maps normalized ingredient name → preferred brand string (may be empty)
+  let pantryBrands = {};
+
   function parsePantry(text) {
     pantrySet.clear();
+    pantryBrands = {};
     if (!text) return;
     const lines  = text.trim().split(/\r?\n/);
     const header = (lines[0] || '').toLowerCase();
-    // Safety guard: if this looks like the recipes tab (has a "Meal" column),
-    // the pantry URL is wrong — skip rather than poison the pantry list.
     if (header.includes('meal')) {
       console.warn('Pantry URL returned the recipes tab — pantry skipped. Check the gid in Settings URL.');
       return;
     }
     for (const line of lines.slice(1)) {
-      // Take only the first column, in case the pantry tab gains extra columns
-      const item = line.split(',')[0].replace(/['"]/g,'').trim();
-      if (item) pantrySet.add(normalizeIng(item));
+      const cols  = parseCSVLine(line);
+      const item  = (cols[0] || '').replace(/['"]/g,'').trim();
+      const brand = (cols[1] || '').replace(/['"]/g,'').trim();
+      if (item) {
+        const norm = normalizeIng(item);
+        pantrySet.add(norm);
+        if (brand) pantryBrands[norm] = brand;
+      }
     }
   }
 
@@ -963,7 +970,12 @@
     pantryIngredients = [];
     for (const key of ingOrder) {
       const row = ingMap[key];
-      if (isPantryItem(row.ingredient)) pantryIngredients.push(Object.assign({}, row, { key: key }));
+      if (isPantryItem(row.ingredient)) {
+        // Use pantry preferred brand if the recipe didn't specify one
+        const norm         = normalizeIng(row.ingredient);
+        const preferredBrand = pantryBrands[norm] || row.brand || '';
+        pantryIngredients.push(Object.assign({}, row, { key: key, brand: preferredBrand }));
+      }
       else                              shopIngredients.push(Object.assign({}, row, { key: key }));
     }
     console.log('Split: ' + shopIngredients.length + ' shop, ' + pantryIngredients.length + ' pantry');
