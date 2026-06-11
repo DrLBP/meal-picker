@@ -676,9 +676,9 @@
   // DEFAULT SHEET URLS
   // Recipes tab: gid=0  |  Pantry tab: gid=1
   // ─────────────────────────────────────────────
-  const DEFAULT_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwdekVm37v50DhP_0o92PUOLtlv5eaE-XQx4kWnF1ffa3WyQCD8WMZDP-QwvytykPsokJFprC70nJ9/pub?single=true&output=csv';
+  const DEFAULT_SHEET_BASE  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwdekVm37v50DhP_0o92PUOLtlv5eaE-XQx4kWnF1ffa3WyQCD8WMZDP-QwvytykPsokJFprC70nJ9/pub?single=true&output=csv';
   const DEFAULT_RECIPES_URL = DEFAULT_SHEET_BASE + '&gid=0';
-  const DEFAULT_PANTRY_URL  = DEFAULT_SHEET_BASE + '&gid=1';
+  const DEFAULT_PANTRY_URL  = DEFAULT_SHEET_BASE + '&gid=1465678095';
 
   // ── State ──
   let allData      = [];
@@ -704,7 +704,7 @@
   function getPantryUrl() {
     // Derive pantry URL from the saved recipes URL by swapping gid
     const base = getCurrentUrl().replace(/&gid=\d+/, '');
-    return base + '&gid=1';
+    return base + '&gid=1465678095';
   }
 
   function saveAndReload() {
