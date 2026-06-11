@@ -702,8 +702,21 @@
   }
 
   function getPantryUrl() {
-    const base = getCurrentUrl().replace(/&gid=\d+/, '');
-    return base + '&gid=1465678095';
+    // BUG FIX (June 2026): the old version only stripped '&gid=' from the saved
+    // URL. Google's publish dialog puts gid FIRST ('?gid=0&...'), which survived
+    // the strip — producing a URL with TWO gids. Google honors the first one, so
+    // the "pantry" fetch silently returned the recipes tab and no ingredient ever
+    // matched. The URL API below replaces gid correctly wherever it appears.
+    try {
+      const u = new URL(getCurrentUrl());
+      u.searchParams.set('gid', '1465678095');
+      u.searchParams.set('single', 'true');
+      u.searchParams.set('output', 'csv');
+      return u.toString();
+    } catch (_) {
+      const base = getCurrentUrl().replace(/[?&]gid=\d+/g, '');
+      return base + (base.includes('?') ? '&' : '?') + 'gid=1465678095';
+    }
   }
 
   function saveAndReload() {
@@ -798,9 +811,17 @@
   function parsePantry(text) {
     pantrySet.clear();
     if (!text) return;
-    const lines = text.trim().split(/\r?\n/).slice(1);
-    for (const line of lines) {
-      const item = line.replace(/['"]/g,'').trim();
+    const lines  = text.trim().split(/\r?\n/);
+    const header = (lines[0] || '').toLowerCase();
+    // Safety guard: if this looks like the recipes tab (has a "Meal" column),
+    // the pantry URL is wrong — skip rather than poison the pantry list.
+    if (header.includes('meal')) {
+      console.warn('Pantry URL returned the recipes tab — pantry skipped. Check the gid in Settings URL.');
+      return;
+    }
+    for (const line of lines.slice(1)) {
+      // Take only the first column, in case the pantry tab gains extra columns
+      const item = line.split(',')[0].replace(/['"]/g,'').trim();
       if (item) pantrySet.add(normalizeIng(item));
     }
   }
