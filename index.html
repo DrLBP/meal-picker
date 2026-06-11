@@ -263,7 +263,7 @@
     /* ── Meal Grid ── */
     #meal-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 14px;
       margin-bottom: 40px;
     }
@@ -272,15 +272,17 @@
       background: #fff;
       border: 2.5px solid #E8E0D0;
       border-radius: 6px;
-      padding: 20px 22px;
       cursor: pointer;
       transition: all 0.15s;
       user-select: none;
       position: relative;
       display: flex;
-      flex-direction: column;
-      gap: 5px;
+      flex-direction: row;
+      align-items: stretch;
+      gap: 0;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      overflow: hidden;
+      min-height: 90px;
     }
 
     .meal-card:hover {
@@ -294,12 +296,46 @@
       box-shadow: 0 4px 16px rgba(6,122,69,0.2);
     }
 
+    /* Thumbnail on the left */
+    .meal-thumb {
+      width: 90px;
+      min-width: 90px;
+      height: 100%;
+      min-height: 90px;
+      object-fit: cover;
+      display: block;
+      background: #E8E0D0;
+      flex-shrink: 0;
+    }
+
+    .meal-thumb-placeholder {
+      width: 90px;
+      min-width: 90px;
+      min-height: 90px;
+      background: #E8E0D0;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    /* Text content on the right */
+    .meal-card-body {
+      padding: 14px 16px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
     .meal-card .check-badge {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 24px;
-      height: 24px;
+      top: 8px;
+      right: 8px;
+      width: 22px;
+      height: 22px;
       background: #fff;
       border-radius: 50%;
       display: flex;
@@ -312,7 +348,7 @@
     .meal-card.selected .check-badge { opacity: 1; }
 
     .meal-card .meal-tag {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -325,7 +361,7 @@
     .meal-card .meal-name {
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 800;
-      font-size: 22px;
+      font-size: 19px;
       text-transform: uppercase;
       line-height: 1.05;
       color: #343434;
@@ -335,9 +371,8 @@
     .meal-card.selected .meal-name { color: #fff; }
 
     .meal-card .meal-meta {
-      font-size: 13px;
+      font-size: 12px;
       color: #999;
-      margin-top: 2px;
       transition: color 0.15s;
     }
 
@@ -545,9 +580,10 @@
   const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwdekVm37v50DhP_0o92PUOLtlv5eaE-XQx4kWnF1ffa3WyQCD8WMZDP-QwvytykPsokJFprC70nJ9/pub?gid=0&single=true&output=csv';
 
   // ── State ──
-  let allData = [];
-  let meals   = {};
-  let selected = new Set();
+  let allData    = [];
+  let meals      = {};
+  let mealImages = {};
+  let selected   = new Set();
 
   // ── Settings panel toggle ──
   function toggleSettings() {
@@ -629,12 +665,14 @@
     const colQty   = findCol(headers, ['quantity','qty','amount']);
     const colUnit  = findCol(headers, ['unit','units']);
     const colBrand = findCol(headers, ['preferred_brand','brand']);
+    const colImg   = findCol(headers, ['imageurl','image_url','image','photo']);
 
     if (colMeal === -1 || colIng === -1)
       throw new Error('Sheet must have "Meal Name" and "Ingredient Name" columns.');
 
-    meals   = {};
-    allData = [];
+    meals      = {};
+    allData    = [];
+    mealImages = {};
 
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCSVLine(lines[i]);
@@ -645,11 +683,13 @@
       const qty   = colQty   !== -1 ? (cols[colQty]   || '').trim() : '';
       const unit  = colUnit  !== -1 ? (cols[colUnit]  || '').trim() : '';
       const brand = colBrand !== -1 ? (cols[colBrand] || '').trim() : '';
+      const img   = colImg   !== -1 ? (cols[colImg]   || '').trim() : '';
 
       if (!meal || !ing) continue;
       if (!meals[meal]) meals[meal] = [];
       meals[meal].push({ ingredient: ing, qty, unit, brand });
       allData.push({ meal, ingredient: ing, qty, unit, brand });
+      if (img && !mealImages[meal]) mealImages[meal] = img;
     }
   }
 
@@ -684,19 +724,29 @@
     document.getElementById('claude-output-section').style.display = 'none';
 
     for (const mealName of Object.keys(meals)) {
-      const count = meals[mealName].length;
-      const card  = document.createElement('div');
+      const count  = meals[mealName].length;
+      const imgUrl = mealImages[mealName] || '';
+      const card   = document.createElement('div');
       card.className = 'meal-card';
       card.dataset.meal = mealName;
+
+      const thumbHtml = imgUrl
+        ? `<img class="meal-thumb" src="${escHtml(imgUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          + `<div class="meal-thumb-placeholder" style="display:none">🍽️</div>`
+        : `<div class="meal-thumb-placeholder">🍽️</div>`;
+
       card.innerHTML = `
-        <div class="check-badge">
-          <svg class="check-icon" viewBox="0 0 14 14" fill="none">
-            <polyline points="2,7 5.5,10.5 12,3.5" stroke="#067A45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        ${thumbHtml}
+        <div class="meal-card-body">
+          <div class="check-badge">
+            <svg class="check-icon" viewBox="0 0 14 14" fill="none">
+              <polyline points="2,7 5.5,10.5 12,3.5" stroke="#067A45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="meal-tag">Dinner</div>
+          <div class="meal-name">${escHtml(mealName)}</div>
+          <div class="meal-meta">${count} ingredient${count !== 1 ? 's' : ''}</div>
         </div>
-        <div class="meal-tag">Dinner</div>
-        <div class="meal-name">${escHtml(mealName)}</div>
-        <div class="meal-meta">${count} ingredient${count !== 1 ? 's' : ''}</div>
       `;
       card.addEventListener('click', () => toggleMeal(mealName, card));
       grid.appendChild(card);
