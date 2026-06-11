@@ -674,22 +674,22 @@
 <script>
   // ─────────────────────────────────────────────
   // DEFAULT SHEET URLS
-  // Recipes tab: gid=0  |  Pantry tab: gid=1
+  // Recipes tab: gid=0  |  Pantry tab: gid=1465678095
   // ─────────────────────────────────────────────
   const DEFAULT_SHEET_BASE  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwdekVm37v50DhP_0o92PUOLtlv5eaE-XQx4kWnF1ffa3WyQCD8WMZDP-QwvytykPsokJFprC70nJ9/pub?single=true&output=csv';
   const DEFAULT_RECIPES_URL = DEFAULT_SHEET_BASE + '&gid=0';
   const DEFAULT_PANTRY_URL  = DEFAULT_SHEET_BASE + '&gid=1465678095';
 
   // ── State ──
-  let allData      = [];
-  let meals        = {};
-  let mealImages   = {};
-  let pantrySet    = new Set();   // normalized pantry item names
-  let selected     = new Set();
-  let pantryIngredients = [];     // [{ingredient, qty, unit, brand, key}] — pantry-matched items
-  let shopIngredients   = [];     // same shape — items to actually buy
+  let allData           = [];
+  let meals             = {};
+  let mealImages        = {};
+  let pantrySet         = new Set();
+  let selected          = new Set();
+  let pantryIngredients = [];
+  let shopIngredients   = [];
 
-  // ── Settings panel toggle ──
+  // ── Settings panel ──
   function toggleSettings() {
     const panel = document.getElementById('config-panel');
     const open  = panel.style.display === 'block';
@@ -702,7 +702,6 @@
   }
 
   function getPantryUrl() {
-    // Derive pantry URL from the saved recipes URL by swapping gid
     const base = getCurrentUrl().replace(/&gid=\d+/, '');
     return base + '&gid=1465678095';
   }
@@ -717,8 +716,8 @@
 
   // ── CORS proxies ──
   const PROXIES = [
-    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+    url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
   ];
 
   async function fetchWithProxy(url) {
@@ -738,21 +737,20 @@
     throw new Error('Could not load the sheet. Click Settings to check your URL.');
   }
 
-  // ── Load recipes + pantry in parallel ──
+  // ── Load recipes + pantry ──
   async function loadAll() {
-    showStatus('Loading your meal plan…', 'info');
+    showStatus('Loading your meal plan...', 'info');
     try {
       const [recipesText, pantryText] = await Promise.all([
         fetchWithProxy(getCurrentUrl()),
         fetchWithProxy(getPantryUrl()).catch(e => { console.warn('Pantry load failed:', e); return ''; }),
       ]);
       console.log('Pantry CSV length:', pantryText.length);
-      console.log('Pantry CSV preview:', pantryText.slice(0, 200));
       parseCSV(recipesText);
       parsePantry(pantryText);
-      console.log('pantrySet size after parse:', pantrySet.size);
+      console.log('pantrySet size:', pantrySet.size, '| sample:', [...pantrySet].slice(0,5));
       if (Object.keys(meals).length === 0)
-        throw new Error('No meals found. Check your column headers: Meal, Ingredient, Qty, Unit, Brand');
+        throw new Error('No meals found. Check column headers: Meal, Ingredient, Qty, Unit, Brand');
       renderMeals();
       document.getElementById('meal-section').style.display = 'block';
       showStatus('✓ ' + Object.keys(meals).length + ' meals loaded.', 'ok');
@@ -764,7 +762,7 @@
 
   // ── Parse recipes CSV ──
   function parseCSV(text) {
-    const lines   = text.trim().split('\n');
+    const lines   = text.trim().split(/\r?\n/);
     const headers = lines[0].split(',').map(h =>
       h.trim().toLowerCase().replace(/\s+/g,'_').replace(/['"]/g,'')
     );
@@ -796,21 +794,18 @@
     }
   }
 
-  // ── Parse pantry CSV (single column: PantryItem) ──
+  // ── Parse pantry CSV ──
   function parsePantry(text) {
     pantrySet.clear();
     if (!text) return;
-    // Split on \r\n or \n, skip header row
     const lines = text.trim().split(/\r?\n/).slice(1);
-    console.log('Pantry lines after split:', lines.length, '— first 5:', lines.slice(0,5));
     for (const line of lines) {
       const item = line.replace(/['"]/g,'').trim();
       if (item) pantrySet.add(normalizeIng(item));
     }
-    console.log('pantrySet sample:', [...pantrySet].slice(0,8));
   }
 
-  // ── Normalize for matching (lowercase, strip trailing s, strip punctuation) ──
+  // ── Normalize for matching ──
   function normalizeIng(name) {
     return name.toLowerCase().trim()
       .replace(/['"]/g,'')
@@ -818,13 +813,10 @@
       .replace(/s$/, '');
   }
 
-  // ── Check if ingredient matches pantry ──
-  function isPantryItem(ingredientName) {
-    const norm = normalizeIng(ingredientName);
-    // Direct match
+  // ── Check if ingredient is a pantry item ──
+  function isPantryItem(name) {
+    const norm = normalizeIng(name);
     if (pantrySet.has(norm)) return true;
-    // Multi-word pantry item fully contained in ingredient name
-    // e.g. pantry has "soy sauce", ingredient is "low-sodium soy sauce" → match
     for (const p of pantrySet) {
       if (p.length > 4 && norm.includes(p)) return true;
     }
@@ -869,22 +861,20 @@
       card.dataset.meal = mealName;
 
       const thumbHtml = imgUrl
-        ? `<img class="meal-thumb" src="${escHtml(imgUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-           <div class="meal-thumb-placeholder" style="display:none">🍽️</div>`
-        : `<div class="meal-thumb-placeholder">🍽️</div>`;
+        ? '<img class="meal-thumb" src="' + escHtml(imgUrl) + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+          + '<div class="meal-thumb-placeholder" style="display:none">&#127374;</div>'
+        : '<div class="meal-thumb-placeholder">&#127374;</div>';
 
-      card.innerHTML = `
-        ${thumbHtml}
-        <div class="meal-card-body">
-          <div class="check-badge">
-            <svg class="check-icon" viewBox="0 0 14 14" fill="none">
-              <polyline points="2,7 5.5,10.5 12,3.5" stroke="#067A45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div class="meal-tag">Dinner</div>
-          <div class="meal-name">${escHtml(mealName)}</div>
-          <div class="meal-meta">${count} ingredient${count !== 1 ? 's' : ''}</div>
-        </div>`;
+      card.innerHTML = thumbHtml
+        + '<div class="meal-card-body">'
+        + '<div class="check-badge"><svg class="check-icon" viewBox="0 0 14 14" fill="none">'
+        + '<polyline points="2,7 5.5,10.5 12,3.5" stroke="#067A45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+        + '</svg></div>'
+        + '<div class="meal-tag">Dinner</div>'
+        + '<div class="meal-name">' + escHtml(mealName) + '</div>'
+        + '<div class="meal-meta">' + count + ' ingredient' + (count !== 1 ? 's' : '') + '</div>'
+        + '</div>';
+
       card.addEventListener('click', () => toggleMeal(mealName, card));
       grid.appendChild(card);
     }
@@ -916,8 +906,8 @@
     const countEl = document.getElementById('selected-count');
     btn.disabled  = selected.size === 0;
     if (selected.size > 0) {
-      btn.textContent       = `Build Shopping List (${selected.size}) →`;
-      countEl.textContent   = `${selected.size} meal${selected.size !== 1 ? 's' : ''} selected`;
+      btn.textContent       = 'Build Shopping List (' + selected.size + ') →';
+      countEl.textContent   = selected.size + ' meal' + (selected.size !== 1 ? 's' : '') + ' selected';
       countEl.style.display = 'block';
     } else {
       btn.textContent       = 'Build Shopping List →';
@@ -925,23 +915,18 @@
     }
   }
 
-  // ── Generate shopping list & mailto ──
+  // ── Generate shopping list ──
   function generateShoppingList() {
-    // 1. Consolidate all ingredients across selected meals
+    // Consolidate all ingredients across selected meals
     const ingMap   = {};
     const ingOrder = [];
 
     for (const mealName of selected) {
       for (const row of meals[mealName]) {
-        const key = `${normalizeIng(row.ingredient)}|${row.brand.toLowerCase().trim()}`;
+        const key = normalizeIng(row.ingredient) + '|' + row.brand.toLowerCase().trim();
         if (!ingMap[key]) {
-          ingMap[key] = {
-            ingredient: row.ingredient,
-            unit:       row.unit,
-            brand:      row.brand,
-            totalQty:   parseFloat(row.qty) || null,
-            rawQty:     row.qty,
-          };
+          ingMap[key] = { ingredient: row.ingredient, unit: row.unit, brand: row.brand,
+                          totalQty: parseFloat(row.qty) || null, rawQty: row.qty };
           ingOrder.push(key);
         } else {
           const ex  = ingMap[key];
@@ -952,85 +937,71 @@
       }
     }
 
-    // 2. Split into shop vs pantry
+    // Split into shop vs pantry
     shopIngredients   = [];
     pantryIngredients = [];
     for (const key of ingOrder) {
       const row = ingMap[key];
-      const isPantry = isPantryItem(row.ingredient);
-      console.log(`  ${row.ingredient} → ${isPantry ? 'PANTRY' : 'SHOP'}`);
-      if (isPantry) pantryIngredients.push({ ...row, key });
-      else          shopIngredients.push({ ...row, key });
+      if (isPantryItem(row.ingredient)) pantryIngredients.push(Object.assign({}, row, { key: key }));
+      else                              shopIngredients.push(Object.assign({}, row, { key: key }));
     }
-    console.log(`Split: ${shopIngredients.length} shop, ${pantryIngredients.length} pantry`);
+    console.log('Split: ' + shopIngredients.length + ' shop, ' + pantryIngredients.length + ' pantry');
 
-    // 3. Render shopping list
+    // Render shopping list
     const listEl = document.getElementById('ingredient-list');
     listEl.innerHTML = '';
     const hdr = document.createElement('div');
     hdr.className   = 'meal-group-header';
-    hdr.textContent = `${shopIngredients.length} items to buy · ${selected.size} meal${selected.size !== 1 ? 's' : ''}`;
+    hdr.textContent = shopIngredients.length + ' items to buy · ' + selected.size + ' meal' + (selected.size !== 1 ? 's' : '');
     listEl.appendChild(hdr);
 
     for (const row of shopIngredients) {
       const qty    = row.totalQty !== null ? row.totalQty : (row.rawQty || '');
-      const qtyStr = qty ? `${qty}${row.unit ? ' ' + row.unit : ''}` : '';
+      const qtyStr = qty ? (qty + (row.unit ? ' ' + row.unit : '')) : '';
       const r      = document.createElement('div');
       r.className  = 'ingredient-row';
-      r.innerHTML  = `
-        <span class="ing-name">${escHtml(row.ingredient)}</span>
-        <span>
-          <span class="ing-qty">${escHtml(qtyStr)}</span>
-          ${row.brand ? `<br/><span class="ing-brand">${escHtml(row.brand)}</span>` : ''}
-        </span>`;
+      r.innerHTML  = '<span class="ing-name">' + escHtml(row.ingredient) + '</span>'
+        + '<span><span class="ing-qty">' + escHtml(qtyStr) + '</span>'
+        + (row.brand ? '<br/><span class="ing-brand">' + escHtml(row.brand) + '</span>' : '')
+        + '</span>';
       listEl.appendChild(r);
     }
     document.getElementById('preview-section').style.display = 'block';
 
-    // 4. Render pantry section
+    // Render pantry section
     renderPantrySection();
 
-    // 5. Build email
+    // Build email and show send section
     buildMailto();
-
-    // 6. Show send section and scroll
     document.getElementById('claude-output-section').style.display = 'block';
     const top = document.getElementById('claude-output-section').getBoundingClientRect().top + window.pageYOffset - 40;
-    window.scrollTo({ top, behavior: 'smooth' });
+    window.scrollTo({ top: top, behavior: 'smooth' });
   }
 
   // ── Render pantry section ──
   function renderPantrySection() {
     const section = document.getElementById('pantry-section');
-    if (pantryIngredients.length === 0) {
-      section.style.display = 'none';
-      return;
-    }
+    if (pantryIngredients.length === 0) { section.style.display = 'none'; return; }
     section.style.display = 'block';
-
-    // Update badge count
-    document.getElementById('pantry-count-badge').textContent =
-      pantryIngredients.length + ' skipped';
+    document.getElementById('pantry-count-badge').textContent = pantryIngredients.length + ' skipped';
 
     const listEl = document.getElementById('pantry-list');
     listEl.innerHTML = '';
-
     const note = document.createElement('div');
     note.className   = 'pantry-note';
     note.textContent = "We think you already have these — tick any you've run out of and need to buy.";
     listEl.appendChild(note);
 
-    pantryIngredients.forEach((row, idx) => {
+    pantryIngredients.forEach(function(row, idx) {
       const qty    = row.totalQty !== null ? row.totalQty : (row.rawQty || '');
-      const qtyStr = qty ? `${qty}${row.unit ? ' ' + row.unit : ''}` : '';
+      const qtyStr = qty ? (qty + (row.unit ? ' ' + row.unit : '')) : '';
       const rowEl  = document.createElement('div');
       rowEl.className = 'pantry-item-row';
-      rowEl.innerHTML = `
-        <input type="checkbox" id="pantry-cb-${idx}" onchange="pantryCheckChanged()">
-        <label for="pantry-cb-${idx}">
-          <span>${escHtml(row.ingredient)}</span>
-          <span class="pantry-qty">${escHtml(qtyStr)}</span>
-        </label>`;
+      rowEl.innerHTML = '<input type="checkbox" id="pantry-cb-' + idx + '" onchange="pantryCheckChanged()">'
+        + '<label for="pantry-cb-' + idx + '">'
+        + '<span>' + escHtml(row.ingredient) + '</span>'
+        + '<span class="pantry-qty">' + escHtml(qtyStr) + '</span>'
+        + '</label>';
       listEl.appendChild(rowEl);
     });
   }
@@ -1040,45 +1011,41 @@
     const list  = document.getElementById('pantry-list');
     const label = document.getElementById('pantry-toggle-label');
     const open  = list.style.display !== 'none';
-    list.style.display  = open ? 'none' : 'block';
-    label.textContent   = open
-      ? '▶ Pantry items we\'ll skip'
-      : '▼ Pantry items we\'ll skip';
+    list.style.display = open ? 'none' : 'block';
+    label.textContent  = open ? '▶ Pantry items we\'ll skip' : '▼ Pantry items we\'ll skip';
   }
 
-  // ── Rebuild mailto whenever a pantry checkbox changes ──
+  // ── Rebuild mailto when pantry checkbox changes ──
   function pantryCheckChanged() {
-    // Update row styling
-    document.querySelectorAll('.pantry-item-row').forEach(row => {
+    document.querySelectorAll('.pantry-item-row').forEach(function(row) {
       const cb = row.querySelector('input[type="checkbox"]');
       row.classList.toggle('checked', cb.checked);
     });
     buildMailto();
   }
 
-  // ── Build mailto from current shop list + checked pantry items ──
+  // ── Build mailto ──
   function buildMailto() {
-    // Collect checked pantry items to add back
     const checkedPantry = [];
-    document.querySelectorAll('#pantry-list input[type="checkbox"]').forEach((cb, idx) => {
+    document.querySelectorAll('#pantry-list input[type="checkbox"]').forEach(function(cb, idx) {
       if (cb.checked) checkedPantry.push(pantryIngredients[idx]);
     });
 
-    const finalList  = [...shopIngredients, ...checkedPantry];
+    const finalList  = shopIngredients.concat(checkedPantry);
     const mealList   = Array.from(selected).join(', ');
     const bodyLines  = ['MEALS: ' + mealList, '', 'INGREDIENTS:'];
 
-    finalList.forEach((row, i) => {
+    finalList.forEach(function(row, i) {
       const qty   = row.totalQty !== null ? row.totalQty : (row.rawQty || '');
-      const parts = [`${i+1}. ${row.ingredient}`];
-      if (qty)       parts.push(`qty:${qty}`);
-      if (row.unit)  parts.push(`unit:${row.unit}`);
-      if (row.brand) parts.push(`brand:${row.brand}`);
+      const parts = [(i+1) + '. ' + row.ingredient];
+      if (qty)       parts.push('qty:' + qty);
+      if (row.unit)  parts.push('unit:' + row.unit);
+      if (row.brand) parts.push('brand:' + row.brand);
       bodyLines.push(parts.join(' | '));
     });
     bodyLines.push('', '---', 'Sent from Grocery Meal Picker');
 
-    const mailto = `mailto:DashAndClaude@gmail.com?subject=${encodeURIComponent('Shop Groceries')}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
+    const mailto = 'mailto:DashAndClaude@gmail.com?subject=' + encodeURIComponent('Shop Groceries') + '&body=' + encodeURIComponent(bodyLines.join('\n'));
     document.getElementById('send-email-btn').href = mailto;
   }
 
@@ -1096,7 +1063,7 @@
   }
 
   // ── Auto-load on page open ──
-  window.addEventListener('DOMContentLoaded', () => { loadAll(); });
+  window.addEventListener('DOMContentLoaded', function() { loadAll(); });
 </script>
 </body>
 </html>
