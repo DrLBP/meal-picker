@@ -744,10 +744,13 @@
     try {
       const [recipesText, pantryText] = await Promise.all([
         fetchWithProxy(getCurrentUrl()),
-        fetchWithProxy(getPantryUrl()).catch(() => ''),  // pantry optional
+        fetchWithProxy(getPantryUrl()).catch(e => { console.warn('Pantry load failed:', e); return ''; }),
       ]);
+      console.log('Pantry CSV length:', pantryText.length);
+      console.log('Pantry CSV preview:', pantryText.slice(0, 200));
       parseCSV(recipesText);
       parsePantry(pantryText);
+      console.log('pantrySet size after parse:', pantrySet.size);
       if (Object.keys(meals).length === 0)
         throw new Error('No meals found. Check your column headers: Meal, Ingredient, Qty, Unit, Brand');
       renderMeals();
@@ -797,11 +800,14 @@
   function parsePantry(text) {
     pantrySet.clear();
     if (!text) return;
-    const lines = text.trim().split('\n').slice(1); // skip header
+    // Split on \r\n or \n, skip header row
+    const lines = text.trim().split(/\r?\n/).slice(1);
+    console.log('Pantry lines after split:', lines.length, '— first 5:', lines.slice(0,5));
     for (const line of lines) {
       const item = line.replace(/['"]/g,'').trim();
       if (item) pantrySet.add(normalizeIng(item));
     }
+    console.log('pantrySet sample:', [...pantrySet].slice(0,8));
   }
 
   // ── Normalize for matching (lowercase, strip trailing s, strip punctuation) ──
@@ -815,12 +821,11 @@
   // ── Check if ingredient matches pantry ──
   function isPantryItem(ingredientName) {
     const norm = normalizeIng(ingredientName);
+    // Direct match
     if (pantrySet.has(norm)) return true;
-    // Also check if any pantry item is contained in the ingredient name
-    // e.g. "Sweet Soy Glaze" should NOT match "Soy Sauce" — only exact-ish matches
+    // Multi-word pantry item fully contained in ingredient name
+    // e.g. pantry has "soy sauce", ingredient is "low-sodium soy sauce" → match
     for (const p of pantrySet) {
-      if (norm === p) return true;
-      // Multi-word pantry item fully contained in ingredient
       if (p.length > 4 && norm.includes(p)) return true;
     }
     return false;
@@ -952,9 +957,12 @@
     pantryIngredients = [];
     for (const key of ingOrder) {
       const row = ingMap[key];
-      if (isPantryItem(row.ingredient)) pantryIngredients.push({ ...row, key });
-      else                              shopIngredients.push({ ...row, key });
+      const isPantry = isPantryItem(row.ingredient);
+      console.log(`  ${row.ingredient} → ${isPantry ? 'PANTRY' : 'SHOP'}`);
+      if (isPantry) pantryIngredients.push({ ...row, key });
+      else          shopIngredients.push({ ...row, key });
     }
+    console.log(`Split: ${shopIngredients.length} shop, ${pantryIngredients.length} pantry`);
 
     // 3. Render shopping list
     const listEl = document.getElementById('ingredient-list');
