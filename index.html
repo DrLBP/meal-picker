@@ -790,50 +790,73 @@
     }
   }
 
+  // ── Normalize ingredient name for deduplication ──
+  // Strips trailing "s" so "Lime" and "Limes" merge, lowercase, trim
+  function normalizeIng(name) {
+    return name.toLowerCase().trim().replace(/s$/, '');
+  }
+
   // ── Generate shopping list & mailto ──
   function generateShoppingList() {
-    const ingMap = {};
+    // Consolidate all ingredients across selected meals
+    const ingMap = {};   // normalized key → consolidated row
+    const ingOrder = []; // preserve first-seen order
+
     for (const mealName of selected) {
       for (const row of meals[mealName]) {
-        const key = `${row.ingredient.toLowerCase()}|${row.brand.toLowerCase()}`;
+        const key = `${normalizeIng(row.ingredient)}|${row.brand.toLowerCase().trim()}`;
         if (!ingMap[key]) {
-          ingMap[key] = { ...row, totalQty: parseFloat(row.qty) || null };
+          ingMap[key] = {
+            ingredient: row.ingredient,
+            unit:       row.unit,
+            brand:      row.brand,
+            totalQty:   parseFloat(row.qty) || null,
+            rawQty:     row.qty,
+          };
+          ingOrder.push(key);
         } else {
-          if (ingMap[key].totalQty !== null && parseFloat(row.qty))
-            ingMap[key].totalQty += parseFloat(row.qty);
+          const existing = ingMap[key];
+          const addQty   = parseFloat(row.qty);
+          if (existing.totalQty !== null && addQty) {
+            existing.totalQty += addQty;
+          } else if (!existing.totalQty && addQty) {
+            existing.totalQty = addQty;
+          }
         }
       }
     }
 
-    // Render ingredient preview
+    // Render consolidated ingredient preview
     const listEl = document.getElementById('ingredient-list');
     listEl.innerHTML = '';
-    for (const mealName of selected) {
-      const hdr = document.createElement('div');
-      hdr.className = 'meal-group-header';
-      hdr.textContent = mealName;
-      listEl.appendChild(hdr);
-      for (const row of meals[mealName]) {
-        const r = document.createElement('div');
-        r.className = 'ingredient-row';
-        const qtyStr = row.qty ? `${row.qty}${row.unit ? ' ' + row.unit : ''}` : '';
-        r.innerHTML = `
-          <span class="ing-name">${escHtml(row.ingredient)}</span>
-          <span>
-            <span class="ing-qty">${escHtml(qtyStr)}</span>
-            ${row.brand ? `<br/><span class="ing-brand">${escHtml(row.brand)}</span>` : ''}
-          </span>`;
-        listEl.appendChild(r);
-      }
+
+    const hdr = document.createElement('div');
+    hdr.className = 'meal-group-header';
+    hdr.textContent = `${ingOrder.length} ingredients · ${selected.size} meal${selected.size !== 1 ? 's' : ''}`;
+    listEl.appendChild(hdr);
+
+    for (const key of ingOrder) {
+      const row    = ingMap[key];
+      const qty    = row.totalQty !== null ? row.totalQty : (row.rawQty || '');
+      const qtyStr = qty ? `${qty}${row.unit ? ' ' + row.unit : ''}` : '';
+      const r      = document.createElement('div');
+      r.className  = 'ingredient-row';
+      r.innerHTML  = `
+        <span class="ing-name">${escHtml(row.ingredient)}</span>
+        <span>
+          <span class="ing-qty">${escHtml(qtyStr)}</span>
+          ${row.brand ? `<br/><span class="ing-brand">${escHtml(row.brand)}</span>` : ''}
+        </span>`;
+      listEl.appendChild(r);
     }
     document.getElementById('preview-section').style.display = 'block';
 
-    // Build email
-    const mealList = Array.from(selected).join(', ');
-    const rows = Object.values(ingMap);
+    // Build email from consolidated list
+    const mealList  = Array.from(selected).join(', ');
     const bodyLines = ['MEALS: ' + mealList, '', 'INGREDIENTS:'];
-    rows.forEach((row, i) => {
-      const qty   = row.totalQty !== null ? row.totalQty : (row.qty || '');
+    ingOrder.forEach((key, i) => {
+      const row = ingMap[key];
+      const qty = row.totalQty !== null ? row.totalQty : (row.rawQty || '');
       const parts = [`${i+1}. ${row.ingredient}`];
       if (qty)       parts.push(`qty:${qty}`);
       if (row.unit)  parts.push(`unit:${row.unit}`);
