@@ -483,6 +483,48 @@
       letter-spacing: 0.04em;
     }
 
+    #email-fallback {
+      margin-top: 24px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 600px;
+      text-align: left;
+    }
+    .fallback-desc {
+      font-size: 14px;
+      color: #ccc;
+      margin: 0 0 12px;
+      line-height: 1.5;
+    }
+    #fallback-copy-bar { margin-bottom: 10px; }
+    #copy-btn {
+      padding: 8px 20px;
+      background: #067A45;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+    #copy-btn:hover { background: #045c34; }
+    #email-body-text {
+      width: 100%;
+      height: 220px;
+      background: #111;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 12px;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
     /* ── Divider ── */
     .section-divider {
       max-width: 900px;
@@ -665,8 +707,17 @@
   <div class="section-divider" style="padding:0;margin:0 auto 24px;max-width:900px;padding:0 24px;"><hr></div>
   <h2>Start Shopping</h2>
   <p class="send-desc">Tap the button below. Your mail app will open with everything pre-filled — just hit <strong>Send</strong>. Claude will shop Safeway automatically and email you a summary when done.</p>
-  <a id="send-email-btn" href="#">Send Shopping List to Claude</a>
-  <p class="email-note">Opens your mail app · Sends to <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1f5b7e6c775e717b5c737e6a7b7a5f78727e7673317c7072">[email&#160;protected]</a> · Takes ~2 minutes</p>
+  <a id="send-email-btn" href="#" onclick="handleSendClick(event)">Send Shopping List to Claude</a>
+  <p class="email-note">Opens your mail app · Sends to DashAndClaude@gmail.com · Takes ~2 minutes</p>
+
+  <!-- Desktop fallback: shown if mailto doesn't open -->
+  <div id="email-fallback" style="display:none">
+    <p class="fallback-desc">It looks like no mail app opened. You can copy the message below and paste it into a new email to <strong>DashAndClaude@gmail.com</strong> with subject <strong>Shop Groceries</strong>:</p>
+    <div id="fallback-copy-bar">
+      <button onclick="copyEmailBody()" id="copy-btn">Copy Message</button>
+    </div>
+    <textarea id="email-body-text" readonly></textarea>
+  </div>
 </div>
 
 <footer>Grocery Shopping Automation · Powered by Claude</footer>
@@ -1058,6 +1109,9 @@
   }
 
   // ── Build mailto ──
+  var _lastMailtoHref = '#';
+  var _lastEmailBody  = '';
+
   function buildMailto() {
     const checkedPantry = [];
     document.querySelectorAll('#pantry-list input[type="checkbox"]').forEach(function(cb, idx) {
@@ -1078,8 +1132,49 @@
     });
     bodyLines.push('', '---', 'Sent from Grocery Meal Picker');
 
-    const mailto = 'mailto:DashAndClaude@gmail.com?subject=' + encodeURIComponent('Shop Groceries') + '&body=' + encodeURIComponent(bodyLines.join('\n'));
-    document.getElementById('send-email-btn').href = mailto;
+    _lastEmailBody  = bodyLines.join('\n');
+    _lastMailtoHref = 'mailto:DashAndClaude@gmail.com?subject=' + encodeURIComponent('Shop Groceries') + '&body=' + encodeURIComponent(_lastEmailBody);
+    document.getElementById('send-email-btn').href = _lastMailtoHref;
+  }
+
+  function handleSendClick(e) {
+    e.preventDefault();
+    if (_lastMailtoHref === '#') return;
+
+    // Try to open the mail client
+    window.location.href = _lastMailtoHref;
+
+    // After a short delay, check if the page is still visible (mail clients
+    // that opened will often blur the tab). If we're still here, show fallback.
+    setTimeout(function() {
+      if (document.visibilityState === 'visible') {
+        showFallback();
+      }
+    }, 1500);
+  }
+
+  function showFallback() {
+    const fb = document.getElementById('email-fallback');
+    document.getElementById('email-body-text').value = _lastEmailBody;
+    fb.style.display = 'block';
+    fb.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function copyEmailBody() {
+    const ta = document.getElementById('email-body-text');
+    ta.select();
+    try {
+      navigator.clipboard.writeText(ta.value).then(function() {
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy Message'; }, 2000);
+      });
+    } catch(err) {
+      document.execCommand('copy');
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(function() { btn.textContent = 'Copy Message'; }, 2000);
+    }
   }
 
   // ── Helpers ──
