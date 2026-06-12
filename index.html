@@ -887,6 +887,7 @@
     const colQty   = findCol(headers, ['quantity','qty','amount']);
     const colUnit  = findCol(headers, ['unit','units']);
     const colBrand = findCol(headers, ['preferred_brand','brand']);
+    const colExact = findCol(headers, ['exact_product','exact product','exact']);
     const colImg   = findCol(headers, ['imageurl','image_url','image','photo']);
 
     if (colMeal === -1 || colIng === -1)
@@ -901,11 +902,12 @@
       const qty   = colQty   !== -1 ? (cols[colQty]   || '').trim() : '';
       const unit  = colUnit  !== -1 ? (cols[colUnit]  || '').trim() : '';
       const brand = colBrand !== -1 ? (cols[colBrand] || '').trim() : '';
+      const exact = colExact !== -1 ? (cols[colExact] || '').trim() : '';
       const img   = colImg   !== -1 ? (cols[colImg]   || '').trim() : '';
       if (!meal || !ing) continue;
       if (!meals[meal]) meals[meal] = [];
-      meals[meal].push({ ingredient: ing, qty, unit, brand });
-      allData.push({ meal, ingredient: ing, qty, unit, brand });
+      meals[meal].push({ ingredient: ing, qty, unit, brand, exact });
+      allData.push({ meal, ingredient: ing, qty, unit, brand, exact });
       if (img && !mealImages[meal]) mealImages[meal] = img;
     }
   }
@@ -1090,9 +1092,10 @@
     for (const key of ingOrder) {
       const row = ingMap[key];
       if (isPantryItem(row.ingredient)) {
-        // Use pantry preferred brand if the recipe didn't specify one
-        const norm         = normalizeIng(row.ingredient);
-        const preferredBrand = pantryBrands[norm] || row.brand || '';
+        // Brand priority: recipe-specified > pantry sheet preferred brand
+        // Exact product comes from the recipe sheet (already on row.exact)
+        const norm           = normalizeIng(row.ingredient);
+        const preferredBrand = row.brand || pantryBrands[norm] || '';
         pantryIngredients.push(Object.assign({}, row, { key: key, brand: preferredBrand }));
       }
       else                              shopIngredients.push(Object.assign({}, row, { key: key }));
@@ -1196,6 +1199,7 @@
       if (qty)       parts.push('qty:' + qty);
       if (row.unit)  parts.push('unit:' + row.unit);
       if (row.brand) parts.push('brand:' + row.brand);
+      if (row.exact) parts.push('exact:' + row.exact);
       bodyLines.push(parts.join(' | '));
     });
     bodyLines.push('', '---', 'Sent from Grocery Meal Picker');
