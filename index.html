@@ -731,6 +731,20 @@
   const DEFAULT_RECIPES_URL = DEFAULT_SHEET_BASE + '&gid=0';
   const DEFAULT_PANTRY_URL  = DEFAULT_SHEET_BASE + '&gid=1465678095';
 
+  // ─────────────────────────────────────────────
+  // ONE-TAP SEND (Google Apps Script)
+  // After deploying the mailer script (see "ONE-TAP SEND SETUP.md" in the
+  // project folder), paste its Web App URL between the quotes below.
+  // While empty, the button falls back to opening your mail app.
+  // ─────────────────────────────────────────────
+  const SEND_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxVJSDIqChRSafoYqaSwz2XAFjNS8BnTVhkTzj6lwkR1KUcKl7QF4Y21ueGso1Tc00AfQ/exec';
+  const SEND_TOKEN    = '86dfe07dfe24dd3641ce10797f39bf64';
+
+  // Phones use the MAIL APP so the trigger email comes from whoever is
+  // holding the phone — the listener replies to that same address. Desktop
+  // (Dash's computer only) uses one-tap send via the Apps Script instead.
+  const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   // ── State ──
   let allData           = [];
   let meals             = {};
@@ -1137,11 +1151,48 @@
     document.getElementById('send-email-btn').href = _lastMailtoHref;
   }
 
-  function handleSendClick(e) {
+  // ── Send button: one-tap send via Apps Script, mailto as fallback ──
+  async function handleSendClick(e) {
     e.preventDefault();
     if (_lastMailtoHref === '#') return;
 
-    // Try to open the mail client
+    // Preferred path on DESKTOP: send directly through the Apps Script mailer.
+    // On phones we skip this so the mail app opens and the reply goes to the sender.
+    if (SEND_ENDPOINT && !IS_MOBILE) {
+      const btn      = document.getElementById('send-email-btn');
+      const original = btn.textContent;
+      btn.textContent = 'Sending…';
+      btn.style.pointerEvents = 'none';
+      try {
+        const r = await fetch(SEND_ENDPOINT, {
+          method: 'POST',
+          // Plain string body avoids a CORS preflight, which Apps Script
+          // doesn't support. The script JSON-parses it on its side.
+          body: JSON.stringify({ token: SEND_TOKEN, subject: 'Shop Groceries', body: _lastEmailBody })
+        });
+        const res = await r.json();
+        if (res && res.ok) {
+          btn.textContent = '✓ Sent — Claude is shopping!';
+          btn.style.background = '#067A45';
+          showStatus("✓ Shopping list sent. You'll get a confirmation email when your Safeway cart is ready.", 'ok');
+          setTimeout(function() {
+            btn.textContent = original;
+            btn.style.background = '';
+            btn.style.pointerEvents = '';
+          }, 6000);
+          return;
+        }
+        throw new Error((res && res.error) || 'Send failed');
+      } catch (err) {
+        console.warn('One-tap send failed, falling back to mail app:', err);
+        btn.textContent = original;
+        btn.style.pointerEvents = '';
+        showStatus('Direct send failed — opening your mail app instead.', 'error');
+        // fall through to mailto below
+      }
+    }
+
+    // Fallback path: open the mail client
     window.location.href = _lastMailtoHref;
 
     // After a short delay, check if the page is still visible (mail clients
@@ -1190,8 +1241,17 @@
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  // ── Update the send-section wording when one-tap send is active ──
+  function updateSendCopy() {
+    if (!SEND_ENDPOINT || IS_MOBILE) return;
+    const desc = document.querySelector('.send-desc');
+    const note = document.querySelector('.email-note');
+    if (desc) desc.innerHTML = 'Tap the button below and your shopping list goes straight to Claude — no email app needed. Claude will shop Safeway automatically and email you a summary when done.';
+    if (note) note.textContent = 'Sends automatically · Takes ~2 minutes';
+  }
+
   // ── Auto-load on page open ──
-  window.addEventListener('DOMContentLoaded', function() { loadAll(); });
+  window.addEventListener('DOMContentLoaded', function() { loadAll(); updateSendCopy(); });
 </script>
 </body>
 </html>
