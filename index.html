@@ -642,6 +642,39 @@
       color: #343434;
       font-weight: 600;
     }
+
+    /* ── Search bar ── */
+    #search-bar-wrap {
+      position: relative;
+      max-width: 420px;
+      margin: 0 auto 20px;
+    }
+    #meal-search {
+      width: 100%;
+      padding: 12px 44px 12px 18px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 50px;
+      color: #f0f0f0;
+      font-size: 16px;
+      font-family: 'Barlow', sans-serif;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    #meal-search:focus { border-color: #067A45; }
+    #meal-search::placeholder { color: #666; }
+    /* hide the native clear button so our icon stays clean */
+    #meal-search::-webkit-search-cancel-button { -webkit-appearance: none; }
+    #search-icon {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #555;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -671,6 +704,10 @@
 
 <!-- ── Meal Selection ── -->
 <div id="meal-section">
+  <div id="search-bar-wrap">
+    <input id="meal-search" type="search" placeholder="Search meals…" oninput="filterMeals(this.value)" autocomplete="off" />
+    <span id="search-icon">&#9906;</span>
+  </div>
   <div class="controls">
     <div class="controls-left">
       <button class="btn-outline" onclick="selectAll()">Select All</button>
@@ -684,6 +721,7 @@
     </div>
   </div>
   <div id="meal-grid"></div>
+  <p id="no-results" style="display:none;text-align:center;color:#888;padding:32px 0;font-size:15px;">No meals match your search.</p>
 </div>
 
 <!-- ── Ingredient Preview ── -->
@@ -945,8 +983,11 @@
     updateShopBtn();
     document.getElementById('preview-section').style.display = 'none';
     document.getElementById('claude-output-section').style.display = 'none';
+    const searchEl = document.getElementById('meal-search');
+    if (searchEl) { searchEl.value = ''; }
+    document.getElementById('no-results').style.display = 'none';
 
-    for (const mealName of Object.keys(meals)) {
+    for (const mealName of Object.keys(meals).sort((a, b) => a.localeCompare(b))) {
       const count  = meals[mealName].length;
       const imgUrl = mealImages[mealName] || '';
       const card   = document.createElement('div');
@@ -973,6 +1014,17 @@
     }
   }
 
+  function filterMeals(query) {
+    const q = query.trim().toLowerCase();
+    let visible = 0;
+    document.querySelectorAll('.meal-card').forEach(function(card) {
+      const match = !q || card.dataset.meal.toLowerCase().includes(q);
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+  }
+
   function toggleMeal(name, card) {
     if (selected.has(name)) { selected.delete(name); card.classList.remove('selected'); }
     else                    { selected.add(name);    card.classList.add('selected'); }
@@ -981,7 +1033,9 @@
 
   function selectAll() {
     document.querySelectorAll('.meal-card').forEach(c => {
-      selected.add(c.dataset.meal); c.classList.add('selected');
+      if (c.style.display !== 'none') {
+        selected.add(c.dataset.meal); c.classList.add('selected');
+      }
     });
     updateShopBtn();
   }
