@@ -675,6 +675,167 @@
       color: #555;
       pointer-events: none;
     }
+
+    /* ── Add Recipe button (sits next to Select All / Clear) ── */
+    .btn-add-recipe {
+      background: none;
+      border: 2px dashed #067A45;
+      border-radius: 4px;
+      padding: 8px 18px;
+      font-family: 'Barlow', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      color: #067A45;
+      transition: all 0.15s;
+    }
+    .btn-add-recipe:hover { background: #067A45; color: #fff; border-style: solid; }
+
+    /* ── Add Recipe modal ── */
+    #add-recipe-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(52,52,52,0.55);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    #add-recipe-overlay.open { display: flex; }
+
+    #add-recipe-modal {
+      background: #FEF9EF;
+      border: 2.5px solid #343434;
+      border-radius: 8px;
+      max-width: 560px;
+      width: 100%;
+      padding: 28px 28px 32px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+      margin: auto 0;
+    }
+
+    #add-recipe-modal h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 30px;
+      text-transform: uppercase;
+      color: #343434;
+      margin-bottom: 4px;
+    }
+    #add-recipe-modal .ar-sub {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+
+    .ar-field { margin-bottom: 20px; }
+    .ar-field > label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    /* Styled file drop zones */
+    .ar-file {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 2px dashed #C8BFB0;
+      border-radius: 6px;
+      padding: 14px 16px;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .ar-file:hover { border-color: #067A45; }
+    .ar-file.has-file { border-style: solid; border-color: #067A45; }
+    .ar-file input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .ar-file .ar-file-icon { font-size: 26px; flex-shrink: 0; }
+    .ar-file .ar-file-text { font-size: 14px; color: #888; line-height: 1.3; }
+    .ar-file.has-file .ar-file-text { color: #343434; font-weight: 600; }
+    .ar-thumb {
+      width: 46px; height: 46px; object-fit: cover; border-radius: 4px;
+      flex-shrink: 0; display: none; background: #E8E0D0;
+    }
+    .ar-thumb.show { display: block; }
+
+    /* Action buttons */
+    .ar-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .ar-btn-primary {
+      flex: 1;
+      background: #343434; color: #fff; border: none;
+      padding: 13px 24px; border-radius: 4px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 19px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.04em; cursor: pointer; transition: background 0.15s;
+    }
+    .ar-btn-primary:hover { background: #067A45; }
+    .ar-btn-primary:disabled { background: #C8BFB0; cursor: not-allowed; }
+    .ar-btn-secondary {
+      background: none; border: 2px solid #E8E0D0; color: #888;
+      padding: 13px 20px; border-radius: 4px;
+      font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .ar-btn-secondary:hover { border-color: #343434; color: #343434; }
+
+    /* Status line inside modal */
+    #ar-status {
+      font-size: 13px; font-weight: 600; margin-bottom: 16px;
+      padding: 10px 14px; border-radius: 4px; display: none;
+    }
+    #ar-status.info  { background: #E8F4FD; color: #1a6496; display: block; }
+    #ar-status.error { background: #FDE8E8; color: #c0392b; display: block; }
+    #ar-status.ok    { background: #E8F5EE; color: #067A45; display: block; }
+
+    /* Editable preview table */
+    #ar-preview { display: none; margin-top: 4px; }
+    #ar-preview .ar-meal-name-field { margin-bottom: 16px; }
+    #ar-preview .ar-meal-name-field input {
+      width: 100%; padding: 11px 14px; border: 2px solid #E8E0D0;
+      border-radius: 4px; font-size: 16px; font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; text-transform: uppercase; color: #343434; background: #fff;
+    }
+    #ar-preview .ar-meal-name-field input:focus { outline: none; border-color: #067A45; }
+
+    .ar-ing-table { width: 100%; border-collapse: collapse; }
+    .ar-ing-table th {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #aaa; text-align: left; padding: 0 4px 6px;
+    }
+    .ar-ing-row td { padding: 3px 2px; }
+    .ar-ing-row input {
+      width: 100%; padding: 7px 8px; border: 1.5px solid #E8E0D0;
+      border-radius: 4px; font-size: 13px; font-family: 'Barlow', sans-serif;
+      color: #343434; background: #fff;
+    }
+    .ar-ing-row input:focus { outline: none; border-color: #067A45; }
+    .ar-ing-del {
+      background: none; border: none; color: #C8BFB0; font-size: 18px;
+      cursor: pointer; padding: 0 4px; line-height: 1;
+    }
+    .ar-ing-del:hover { color: #c0392b; }
+    #ar-add-ing-btn {
+      background: none; border: 1.5px dashed #C8BFB0; color: #888;
+      font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 4px;
+      cursor: pointer; margin-top: 10px;
+    }
+    #ar-add-ing-btn:hover { border-color: #067A45; color: #067A45; }
+
+    .ar-preview-note {
+      font-size: 12px; color: #aaa; font-style: italic;
+      margin: 14px 0 6px; line-height: 1.4;
+    }
   </style>
 </head>
 <body>
@@ -712,6 +873,7 @@
     <div class="controls-left">
       <button class="btn-outline" onclick="selectAll()">Select All</button>
       <button class="btn-outline muted" onclick="clearAll()">Clear</button>
+      <button class="btn-add-recipe" onclick="openAddRecipe()">+ Add Recipe</button>
     </div>
     <div class="controls-right">
       <span id="selected-count"></span>
@@ -758,6 +920,70 @@
   </div>
 </div>
 
+<!-- ── Add Recipe Modal ── -->
+<div id="add-recipe-overlay" onclick="if(event.target===this)closeAddRecipe()">
+  <div id="add-recipe-modal">
+    <h2>Add a Recipe</h2>
+    <p class="ar-sub">Snap the two photos from your HelloFresh card: the <strong>ingredient panel</strong> (the list of ingredients) and the <strong>finished dish</strong>. Claude reads the ingredients for you.</p>
+
+    <div id="ar-status"></div>
+
+    <!-- STEP 1: file inputs -->
+    <div id="ar-step-upload">
+      <div class="ar-field">
+        <label>1 · Photo of the ingredient panel</label>
+        <div class="ar-file" id="ar-card-drop">
+          <span class="ar-file-icon">&#128247;</span>
+          <img class="ar-thumb" id="ar-card-thumb" alt="">
+          <span class="ar-file-text" id="ar-card-text">Tap to choose or take a photo…</span>
+          <input type="file" id="ar-card-input" accept="image/*" onchange="onCardChosen(this)">
+        </div>
+      </div>
+
+      <div class="ar-field">
+        <label>2 · Photo of the finished dish</label>
+        <div class="ar-file" id="ar-food-drop">
+          <span class="ar-file-icon">&#127869;</span>
+          <img class="ar-thumb" id="ar-food-thumb" alt="">
+          <span class="ar-file-text" id="ar-food-text">Tap to choose or take a photo…</span>
+          <input type="file" id="ar-food-input" accept="image/*" onchange="onFoodChosen(this)">
+        </div>
+      </div>
+
+      <div class="ar-actions">
+        <button class="ar-btn-primary" id="ar-upload-btn" onclick="extractRecipe()" disabled>Read Ingredients →</button>
+        <button class="ar-btn-secondary" onclick="closeAddRecipe()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: editable preview -->
+    <div id="ar-preview">
+      <div class="ar-meal-name-field">
+        <label style="display:block;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin-bottom:8px;">Meal name</label>
+        <input type="text" id="ar-meal-name" placeholder="Meal name">
+      </div>
+      <table class="ar-ing-table">
+        <thead>
+          <tr>
+            <th style="width:42%">Ingredient</th>
+            <th style="width:16%">Qty</th>
+            <th style="width:18%">Unit</th>
+            <th style="width:18%">Brand</th>
+            <th style="width:6%"></th>
+          </tr>
+        </thead>
+        <tbody id="ar-ing-body"></tbody>
+      </table>
+      <button id="ar-add-ing-btn" onclick="addIngredientRow()">+ Add ingredient</button>
+      <p class="ar-preview-note">Check Claude's reading and fix anything that looks off. When you confirm, this meal is saved to your sheet and the dish photo is uploaded.</p>
+      <div class="ar-actions">
+        <button class="ar-btn-primary" id="ar-confirm-btn" onclick="commitRecipe()">Save Recipe</button>
+        <button class="ar-btn-secondary" onclick="backToUpload()">Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer>Grocery Shopping Automation · Powered by Claude</footer>
 
 <script>
@@ -777,6 +1003,15 @@
   // ─────────────────────────────────────────────
   const SEND_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxVJSDIqChRSafoYqaSwz2XAFjNS8BnTVhkTzj6lwkR1KUcKl7QF4Y21ueGso1Tc00AfQ/exec';
   const SEND_TOKEN    = '86dfe07dfe24dd3641ce10797f39bf64';
+
+  // ─────────────────────────────────────────────
+  // ADD RECIPE (Google Apps Script)
+  // After deploying "google_apps_script_add_recipe.gs.txt" (see
+  // "ADD RECIPE SETUP.md"), paste its Web App URL here, and set
+  // ADD_RECIPE_TOKEN to the SAME random password you put in the script.
+  // ─────────────────────────────────────────────
+  const ADD_RECIPE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzhI5BqqHG-iYBZcMqnJZqOp9ZEknKbBoovHLC_5hPUH3wI1UCKy_Q8deltLuyqRQVWhA/exec';
+  const ADD_RECIPE_TOKEN    = 'grocery-pass-7741';
 
   // Phones use the MAIL APP so the trigger email comes from whoever is
   // holding the phone — the listener replies to that same address. Desktop
@@ -1303,6 +1538,243 @@
     if (desc) desc.innerHTML = 'Tap the button below and your shopping list goes straight to Claude — no email app needed. Claude will shop Safeway automatically and email you a summary when done.';
     if (note) note.textContent = 'Sends automatically · Takes ~2 minutes';
   }
+
+  // ═════════════════════════════════════════════════════════════
+  //  ADD RECIPE FLOW
+  // ═════════════════════════════════════════════════════════════
+
+  // Holds the two chosen photos as base64 (without the data: prefix).
+  let arCardBase64  = null;   // ingredient panel (sent to Claude)
+  let arCardMedia   = 'image/jpeg';
+  let arFoodBase64  = null;   // cropped finished-dish photo (uploaded to GitHub)
+
+  // ── Open / close the modal ──
+  function openAddRecipe() {
+    resetAddRecipe();
+    document.getElementById('add-recipe-overlay').classList.add('open');
+  }
+  function closeAddRecipe() {
+    document.getElementById('add-recipe-overlay').classList.remove('open');
+  }
+  function resetAddRecipe() {
+    arCardBase64 = null; arFoodBase64 = null; arCardMedia = 'image/jpeg';
+    document.getElementById('ar-step-upload').style.display = 'block';
+    document.getElementById('ar-preview').style.display = 'none';
+    document.getElementById('ar-ing-body').innerHTML = '';
+    document.getElementById('ar-meal-name').value = '';
+    arSetStatus('', '');
+    ['card','food'].forEach(function(which) {
+      document.getElementById('ar-' + which + '-input').value = '';
+      document.getElementById('ar-' + which + '-text').textContent = 'Tap to choose or take a photo…';
+      document.getElementById('ar-' + which + '-drop').classList.remove('has-file');
+      const thumb = document.getElementById('ar-' + which + '-thumb');
+      thumb.classList.remove('show'); thumb.src = '';
+    });
+    updateUploadBtn();
+  }
+
+  function arSetStatus(msg, type) {
+    const el = document.getElementById('ar-status');
+    el.textContent = msg || '';
+    el.className = msg ? type : '';
+  }
+
+  // ── Read a File as a data URL, returns a Promise ──
+  function readFileAsDataURL(file) {
+    return new Promise(function(resolve, reject) {
+      const r = new FileReader();
+      r.onload  = function() { resolve(r.result); };
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  // ── Ingredient card chosen: just preview + remember base64 ──
+  async function onCardChosen(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const dataUrl = await readFileAsDataURL(file);
+    arCardMedia  = (file.type || 'image/jpeg');
+    arCardBase64 = dataUrl.split(',')[1];   // strip "data:...;base64,"
+    const thumb = document.getElementById('ar-card-thumb');
+    thumb.src = dataUrl; thumb.classList.add('show');
+    document.getElementById('ar-card-text').textContent = file.name;
+    document.getElementById('ar-card-drop').classList.add('has-file');
+    updateUploadBtn();
+  }
+
+  // ── Food photo chosen: crop to the right ~60% before storing ──
+  async function onFoodChosen(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const dataUrl = await readFileAsDataURL(file);
+    const cropped = await cropRight60(dataUrl);   // returns base64 (no prefix)
+    arFoodBase64  = cropped.base64;
+    const thumb = document.getElementById('ar-food-thumb');
+    thumb.src = cropped.dataUrl; thumb.classList.add('show');
+    document.getElementById('ar-food-text').textContent = file.name + ' (cropped)';
+    document.getElementById('ar-food-drop').classList.add('has-file');
+    updateUploadBtn();
+  }
+
+  // ── Crop an image to its right 60% using a canvas, return JPEG base64 ──
+  function cropRight60(dataUrl) {
+    return new Promise(function(resolve, reject) {
+      const img = new Image();
+      img.onload = function() {
+        const cropFrac  = 0.60;                       // keep the right 60%
+        const startX    = Math.round(img.width * (1 - cropFrac));
+        const cropW     = img.width - startX;
+        const cropH     = img.height;
+        const canvas    = document.createElement('canvas');
+        canvas.width    = cropW;
+        canvas.height   = cropH;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, startX, 0, cropW, cropH, 0, 0, cropW, cropH);
+        const out = canvas.toDataURL('image/jpeg', 0.88);
+        resolve({ dataUrl: out, base64: out.split(',')[1] });
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }
+
+  function updateUploadBtn() {
+    // Ingredient card is required (Claude needs it). Food photo is optional but
+    // expected — we allow saving without it (card just won't have a photo).
+    document.getElementById('ar-upload-btn').disabled = !arCardBase64;
+  }
+
+  // ── POST helper for the Add Recipe script.
+  //    Plain-string body (no JSON content-type header) avoids the CORS
+  //    preflight that Apps Script can't answer — same trick as the mailer. ──
+  async function postToAddRecipe(payloadObj) {
+    if (!ADD_RECIPE_ENDPOINT || ADD_RECIPE_ENDPOINT.indexOf('PASTE_') === 0) {
+      throw new Error('Add Recipe isn\'t set up yet. Paste your Web App URL into index.html (ADD_RECIPE_ENDPOINT).');
+    }
+    const r = await fetch(ADD_RECIPE_ENDPOINT, {
+      method: 'POST',
+      body: JSON.stringify(Object.assign({ token: ADD_RECIPE_TOKEN }, payloadObj))
+    });
+    const res = await r.json();
+    return res;
+  }
+
+  // ── STEP 1 → 2: send card to Claude, render editable preview ──
+  async function extractRecipe() {
+    if (!arCardBase64) return;
+    const btn = document.getElementById('ar-upload-btn');
+    const orig = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Reading…';
+    arSetStatus('Claude is reading your ingredient card…', 'info');
+    try {
+      const res = await postToAddRecipe({
+        action: 'extract',
+        imageBase64: arCardBase64,
+        mediaType: arCardMedia
+      });
+      if (!res || !res.ok) throw new Error((res && res.error) || 'Extraction failed.');
+      arSetStatus('', '');
+      renderPreview(res.meal, res.ingredients);
+      document.getElementById('ar-step-upload').style.display = 'none';
+      document.getElementById('ar-preview').style.display = 'block';
+    } catch (err) {
+      arSetStatus(String(err.message || err), 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = orig;
+    }
+  }
+
+  // ── Render the editable ingredient table ──
+  function renderPreview(meal, ingredients) {
+    document.getElementById('ar-meal-name').value = meal || '';
+    const body = document.getElementById('ar-ing-body');
+    body.innerHTML = '';
+    (ingredients || []).forEach(function(ing) { appendIngRow(ing); });
+    if (!ingredients || ingredients.length === 0) appendIngRow({});
+  }
+
+  function appendIngRow(ing) {
+    const tr = document.createElement('tr');
+    tr.className = 'ar-ing-row';
+    tr.innerHTML =
+      '<td><input type="text" class="ar-c-ing"   value="' + escAttr(ing.ingredient || '') + '"></td>' +
+      '<td><input type="text" class="ar-c-qty"   value="' + escAttr(ing.qty   || '') + '"></td>' +
+      '<td><input type="text" class="ar-c-unit"  value="' + escAttr(ing.unit  || '') + '"></td>' +
+      '<td><input type="text" class="ar-c-brand" value="' + escAttr(ing.brand || '') + '"></td>' +
+      '<td style="text-align:center"><button class="ar-ing-del" title="Remove" onclick="this.closest(\'tr\').remove()">&times;</button></td>';
+    document.getElementById('ar-ing-body').appendChild(tr);
+  }
+
+  function addIngredientRow() { appendIngRow({}); }
+
+  function backToUpload() {
+    document.getElementById('ar-preview').style.display = 'none';
+    document.getElementById('ar-step-upload').style.display = 'block';
+    arSetStatus('', '');
+  }
+
+  // ── Gather the edited table back into an array ──
+  function collectIngredients() {
+    const rows = document.querySelectorAll('#ar-ing-body .ar-ing-row');
+    const out = [];
+    rows.forEach(function(tr) {
+      const ingredient = tr.querySelector('.ar-c-ing').value.trim();
+      if (!ingredient) return;   // skip blank rows
+      out.push({
+        ingredient: ingredient,
+        qty:   tr.querySelector('.ar-c-qty').value.trim(),
+        unit:  tr.querySelector('.ar-c-unit').value.trim(),
+        brand: tr.querySelector('.ar-c-brand').value.trim()
+      });
+    });
+    return out;
+  }
+
+  // ── STEP 2 → save: append to sheet + upload photo, then reload meals ──
+  async function commitRecipe() {
+    const meal = document.getElementById('ar-meal-name').value.trim();
+    const ingredients = collectIngredients();
+    if (!meal) { arSetStatus('Please enter a meal name.', 'error'); return; }
+    if (ingredients.length === 0) { arSetStatus('Add at least one ingredient.', 'error'); return; }
+
+    const btn = document.getElementById('ar-confirm-btn');
+    const orig = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Saving…';
+    arSetStatus('Saving your recipe and uploading the photo…', 'info');
+    try {
+      const res = await postToAddRecipe({
+        action: 'commit',
+        meal: meal,
+        ingredients: ingredients,
+        foodPhotoBase64: arFoodBase64 || ''
+      });
+      if (!res || !res.ok) throw new Error((res && res.error) || 'Save failed.');
+      arSetStatus('✓ Saved! "' + meal + '" will appear after the sheet refreshes.', 'ok');
+      btn.textContent = '✓ Saved';
+      // Give Google a moment to publish, then reload the meal list.
+      setTimeout(function() {
+        closeAddRecipe();
+        showStatus('Refreshing meals to include "' + meal + '"…', 'info');
+        loadAll();
+      }, 1800);
+    } catch (err) {
+      arSetStatus(String(err.message || err), 'error');
+      btn.disabled = false; btn.textContent = orig;
+    }
+  }
+
+  // ── Attribute-safe escape for values placed inside HTML attributes ──
+  function escAttr(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+      .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Close the modal on Escape.
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeAddRecipe();
+  });
 
   // ── Auto-load on page open ──
   window.addEventListener('DOMContentLoaded', function() { loadAll(); updateSendCopy(); });
