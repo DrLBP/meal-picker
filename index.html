@@ -2442,6 +2442,11 @@
 
   // ── Auto-load on page open ──
   window.addEventListener('DOMContentLoaded', function() { loadAll(); updateSendCopy(); });
+
+  // ── Service worker (required for Android PWA installability) ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/meal-picker/sw.js');
+  }
 </script>
 </body>
 </html>
