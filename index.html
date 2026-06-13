@@ -1204,7 +1204,7 @@
         <span class="ar-file-icon">&#128247;</span>
         <img class="ar-thumb" id="as-photo-thumb" alt="">
         <span class="ar-file-text" id="as-photo-text">Tap to choose or take a photo…</span>
-        <input type="file" id="as-photo-input" accept="image/*" onchange="onStaplePhotoChosen(this)">
+        <input type="file" id="as-photo-input" accept="image/*" capture="environment" onchange="onStaplePhotoChosen(this)">
       </div>
     </div>
 
@@ -1762,13 +1762,16 @@
         sizeHtml = '<select class="staple-size" id="staple-size-' + idx + '" onchange="stapleChanged()">' + opts + '</select>';
       }
 
+      // Subline under the name: prefer the exact product if set, else the brand.
+      const subline = s.exact || s.brand || '';
+
       const rowEl = document.createElement('div');
       rowEl.className = 'staple-row';
       rowEl.innerHTML =
         '<input type="checkbox" id="staple-cb-' + idx + '" onchange="stapleChanged()">' +
         thumb +
         '<span class="staple-name">' + escHtml(s.name) +
-          (s.brand ? '<span class="staple-brand">' + escHtml(s.brand) + '</span>' : '') +
+          (subline ? '<span class="staple-brand">' + escHtml(subline) + '</span>' : '') +
         '</span>' +
         '<span class="staple-controls">' +
           sizeHtml +
