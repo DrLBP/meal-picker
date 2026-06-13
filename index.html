@@ -947,13 +947,9 @@
   }
 
   // ── Check if ingredient is a pantry item ──
+  // Only exact (normalized) matches count — "butter" must not match "buttermilk biscuits"
   function isPantryItem(name) {
-    const norm = normalizeIng(name);
-    if (pantrySet.has(norm)) return true;
-    for (const p of pantrySet) {
-      if (p.length > 4 && norm.includes(p)) return true;
-    }
-    return false;
+    return pantrySet.has(normalizeIng(name));
   }
 
   function findCol(headers, candidates) {
