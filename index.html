@@ -649,6 +649,77 @@
       font-weight: 600;
     }
 
+    /* ── Household staples rows ── */
+    #staples-list {
+      background: #FDFAF4;
+      border: 1.5px solid #E8E0D0;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      padding: 8px 24px 16px;
+    }
+    .staple-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid #F5F0E8;
+      flex-wrap: wrap;
+    }
+    .staple-row:last-child { border-bottom: none; }
+    .staple-row input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: #067A45;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .staple-thumb {
+      width: 34px; height: 34px; object-fit: cover; border-radius: 4px;
+      background: #E8E0D0; flex-shrink: 0;
+    }
+    .staple-thumb-ph {
+      width: 34px; height: 34px; border-radius: 4px; background: #E8E0D0;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .staple-name {
+      flex: 1; min-width: 120px; font-size: 14px; color: #888;
+    }
+    .staple-row.checked .staple-name { color: #343434; font-weight: 600; }
+    .staple-name .staple-brand {
+      display: block; font-size: 11px; color: #C8BFB0; font-style: italic;
+    }
+    .staple-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .staple-size {
+      padding: 6px 8px; border: 1.5px solid #E8E0D0; border-radius: 4px;
+      font-size: 13px; font-family: 'Barlow', sans-serif; color: #343434;
+      background: #fff; cursor: pointer; max-width: 130px;
+    }
+    .staple-size:focus { outline: none; border-color: #067A45; }
+    .staple-qty {
+      display: flex; align-items: center; border: 1.5px solid #E8E0D0;
+      border-radius: 4px; overflow: hidden; background: #fff;
+    }
+    .staple-qty button {
+      width: 28px; height: 30px; border: none; background: #F5F0E8;
+      color: #343434; font-size: 16px; font-weight: 700; cursor: pointer;
+      line-height: 1;
+    }
+    .staple-qty button:hover { background: #E8E0D0; }
+    .staple-qty span {
+      min-width: 28px; text-align: center; font-size: 14px; font-weight: 600;
+      color: #343434;
+    }
+    #staples-add-btn {
+      width: 100%; margin-top: 12px;
+      background: none; border: 1.5px dashed #067A45; color: #067A45;
+      border-radius: 6px; padding: 10px; font-family: 'Barlow', sans-serif;
+      font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.04em;
+      transition: all 0.15s;
+    }
+    #staples-add-btn:hover { background: #067A45; color: #fff; border-style: solid; }
+    .staples-note {
+      font-size: 12px; color: #aaa; padding: 10px 0 6px; line-height: 1.5;
+      font-style: italic;
+    }
+
     /* ── Search bar ── */
     #search-bar-wrap {
       position: relative;
@@ -697,8 +768,8 @@
     }
     .btn-add-recipe:hover { background: #067A45; color: #fff; border-style: solid; }
 
-    /* ── Add Recipe modal ── */
-    #add-recipe-overlay {
+    /* ── Add Recipe / Add Staple modals (shared) ── */
+    #add-recipe-overlay, #add-staple-overlay {
       position: fixed;
       inset: 0;
       background: rgba(52,52,52,0.55);
@@ -709,9 +780,9 @@
       overflow-y: auto;
       z-index: 1000;
     }
-    #add-recipe-overlay.open { display: flex; }
+    #add-recipe-overlay.open, #add-staple-overlay.open { display: flex; }
 
-    #add-recipe-modal {
+    #add-recipe-modal, #add-staple-modal {
       background: #FEF9EF;
       border: 2.5px solid #343434;
       border-radius: 8px;
@@ -722,7 +793,7 @@
       margin: auto 0;
     }
 
-    #add-recipe-modal h2 {
+    #add-recipe-modal h2, #add-staple-modal h2 {
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 900;
       font-size: 30px;
@@ -730,11 +801,44 @@
       color: #343434;
       margin-bottom: 4px;
     }
-    #add-recipe-modal .ar-sub {
+    #add-recipe-modal .ar-sub, #add-staple-modal .ar-sub {
       font-size: 14px;
       color: #666;
       line-height: 1.5;
       margin-bottom: 22px;
+    }
+
+    /* Text inputs in the Add Staple modal */
+    .as-input {
+      width: 100%; padding: 11px 14px; border: 2px solid #E8E0D0;
+      border-radius: 4px; font-size: 15px; font-family: 'Barlow', sans-serif;
+      color: #343434; background: #fff;
+    }
+    .as-input:focus { outline: none; border-color: #067A45; }
+
+    /* Status line in the Add Staple modal */
+    #as-status {
+      font-size: 13px; font-weight: 600; margin-bottom: 16px;
+      padding: 10px 14px; border-radius: 4px; display: none;
+    }
+    #as-status.info  { background: #E8F4FD; color: #1a6496; display: block; }
+    #as-status.error { background: #FDE8E8; color: #c0392b; display: block; }
+    #as-status.ok    { background: #E8F5EE; color: #067A45; display: block; }
+
+    /* Staple crop stage shares the recipe crop visuals */
+    #as-crop-stage {
+      position: relative; width: 100%; max-width: 360px; margin: 0 auto;
+      user-select: none; touch-action: none; line-height: 0;
+      background: #E8E0D0; border-radius: 6px; overflow: hidden;
+    }
+    #as-crop-img { display: block; width: 100%; height: auto; pointer-events: none; }
+    #as-crop-shade-top, #as-crop-shade-bottom,
+    #as-crop-shade-left, #as-crop-shade-right {
+      position: absolute; background: rgba(52,52,52,0.45); pointer-events: none;
+    }
+    #as-crop-box {
+      position: absolute; border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.4); cursor: move; box-sizing: border-box;
     }
 
     .ar-field { margin-bottom: 20px; }
@@ -952,6 +1056,15 @@
     </button>
     <div id="pantry-list" style="display:none"></div>
   </div>
+
+  <!-- Household staples collapsed section -->
+  <div id="staples-section" style="display:none">
+    <button class="pantry-toggle" onclick="toggleStaples()" id="staples-toggle-btn">
+      <span id="staples-toggle-label">▶ Add household staples</span>
+      <span id="staples-count-badge"></span>
+    </button>
+    <div id="staples-list" style="display:none"></div>
+  </div>
 </div>
 
 <!-- ── Send to Claude ── -->
@@ -1057,6 +1170,69 @@
   </div>
 </div>
 
+<!-- ── Add Staple Modal ── -->
+<div id="add-staple-overlay" class="ar-overlay" onclick="if(event.target===this)closeAddStaple()">
+  <div id="add-staple-modal" class="ar-modal-inner">
+    <h2>Add a Staple</h2>
+    <p class="ar-sub">A non-recipe item you keep stocked — paper towels, olive oil, almond milk. Set your go-to size; Claude will pick the closest match when shopping and you can fine-tune the size on the sheet later.</p>
+
+    <div id="as-status"></div>
+
+    <div class="ar-field">
+      <label>Item name</label>
+      <input type="text" id="as-name" class="as-input" placeholder="e.g. Olive Oil" oninput="updateStapleSaveBtn()">
+    </div>
+
+    <div class="ar-field">
+      <label>Go-to size</label>
+      <input type="text" id="as-size" class="as-input" placeholder="e.g. 32 oz  (or 12 rolls, 1 gal…)">
+    </div>
+
+    <div class="ar-field">
+      <label>Preferred brand (optional)</label>
+      <input type="text" id="as-brand" class="as-input" placeholder="e.g. California Olive Ranch">
+    </div>
+
+    <div class="ar-field">
+      <label>Exact product (optional)</label>
+      <input type="text" id="as-exact" class="as-input" placeholder="e.g. California Olive Ranch Extra Virgin 32oz">
+    </div>
+
+    <div class="ar-field">
+      <label>Photo (optional)</label>
+      <div class="ar-file" id="as-photo-drop">
+        <span class="ar-file-icon">&#128247;</span>
+        <img class="ar-thumb" id="as-photo-thumb" alt="">
+        <span class="ar-file-text" id="as-photo-text">Tap to choose or take a photo…</span>
+        <input type="file" id="as-photo-input" accept="image/*" onchange="onStaplePhotoChosen(this)">
+      </div>
+    </div>
+
+    <!-- Crop appears once a photo is chosen -->
+    <div id="as-crop-block" style="display:none">
+      <label style="display:block;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin:6px 0 8px;">Drag to crop</label>
+      <div id="as-crop-stage">
+        <img id="as-crop-img" alt="">
+        <div id="as-crop-box">
+          <span class="ar-crop-handle nw"></span>
+          <span class="ar-crop-handle ne"></span>
+          <span class="ar-crop-handle sw"></span>
+          <span class="ar-crop-handle se"></span>
+        </div>
+        <div id="as-crop-shade-top"></div>
+        <div id="as-crop-shade-bottom"></div>
+        <div id="as-crop-shade-left"></div>
+        <div id="as-crop-shade-right"></div>
+      </div>
+    </div>
+
+    <div class="ar-actions" style="margin-top:18px">
+      <button class="ar-btn-primary" id="as-save-btn" onclick="commitStaple()" disabled>Save Staple</button>
+      <button class="ar-btn-secondary" onclick="closeAddStaple()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <footer>Grocery Shopping Automation · Powered by Claude</footer>
 
 <script>
@@ -1086,6 +1262,15 @@
   const ADD_RECIPE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzmGF68To6uI7iGLMpmI94AFOaZaTKIclAT2HIOl54cHOJdPYky-iqod64zDX0yh9afcg/exec';
   const ADD_RECIPE_TOKEN    = 'grocery-pass-7741';
 
+  // ─────────────────────────────────────────────
+  // HOUSEHOLD STAPLES ("Extras" tab)
+  // After you create the "Extras" tab in your sheet (columns:
+  // Name, Sizes, Brand, ImageURL), put its gid here. To find the gid: open the
+  // tab in Google Sheets and look at the URL — the number after "#gid=".
+  // Until this is set correctly, the staples drawer just stays empty.
+  // ─────────────────────────────────────────────
+  const EXTRAS_GID = '753957600';
+
   // Phones use the MAIL APP so the trigger email comes from whoever is
   // holding the phone — the listener replies to that same address. Desktop
   // (Dash's computer only) uses one-tap send via the Apps Script instead.
@@ -1099,6 +1284,7 @@
   let selected          = new Set();
   let pantryIngredients = [];
   let shopIngredients   = [];
+  let staples           = [];   // [{ name, sizes:[...], brand, image }]
 
   // ── Settings panel ──
   function toggleSettings() {
@@ -1127,6 +1313,22 @@
     } catch (_) {
       const base = getCurrentUrl().replace(/[?&]gid=\d+/g, '');
       return base + (base.includes('?') ? '&' : '?') + 'gid=1465678095';
+    }
+  }
+
+  // Build the Extras-tab CSV URL the same way as the pantry tab, but with the
+  // Extras gid. Returns null if the gid hasn't been filled in yet.
+  function getExtrasUrl() {
+    if (!EXTRAS_GID || EXTRAS_GID.indexOf('PASTE_') === 0) return null;
+    try {
+      const u = new URL(getCurrentUrl());
+      u.searchParams.set('gid', EXTRAS_GID);
+      u.searchParams.set('single', 'true');
+      u.searchParams.set('output', 'csv');
+      return u.toString();
+    } catch (_) {
+      const base = getCurrentUrl().replace(/[?&]gid=\d+/g, '');
+      return base + (base.includes('?') ? '&' : '?') + 'gid=' + EXTRAS_GID;
     }
   }
 
@@ -1161,18 +1363,23 @@
     throw new Error('Could not load the sheet. Click Settings to check your URL.');
   }
 
-  // ── Load recipes + pantry ──
+  // ── Load recipes + pantry + extras ──
   async function loadAll() {
     showStatus('Loading your meal plan...', 'info');
     try {
-      const [recipesText, pantryText] = await Promise.all([
+      const extrasUrl = getExtrasUrl();
+      const [recipesText, pantryText, extrasText] = await Promise.all([
         fetchWithProxy(getCurrentUrl()),
         fetchWithProxy(getPantryUrl()).catch(e => { console.warn('Pantry load failed:', e); return ''; }),
+        extrasUrl
+          ? fetchWithProxy(extrasUrl).catch(e => { console.warn('Extras load failed:', e); return ''; })
+          : Promise.resolve(''),
       ]);
-      console.log('Pantry CSV length:', pantryText.length);
+      console.log('Pantry CSV length:', pantryText.length, '| Extras CSV length:', extrasText.length);
       parseCSV(recipesText);
       parsePantry(pantryText);
-      console.log('pantrySet size:', pantrySet.size, '| sample:', [...pantrySet].slice(0,5));
+      parseExtras(extrasText);
+      console.log('pantrySet size:', pantrySet.size, '| staples:', staples.length);
       if (Object.keys(meals).length === 0)
         throw new Error('No meals found. Check column headers: Meal, Ingredient, Qty, Unit, Brand');
       renderMeals();
@@ -1181,6 +1388,46 @@
       setTimeout(() => { document.getElementById('status-bar').style.display = 'none'; }, 2500);
     } catch (err) {
       showStatus('Error: ' + err.message, 'error');
+    }
+  }
+
+  // ── Parse the Extras (household staples) tab ──
+  // Columns: Name, Sizes, Brand, ImageURL.  "Sizes" may be a single go-to size
+  // or a comma-separated list (e.g. "16 oz, 32 oz").
+  function parseExtras(text) {
+    staples = [];
+    if (!text) return;
+    const lines   = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return;
+    const headers = lines[0].split(',').map(h =>
+      h.trim().toLowerCase().replace(/['"]/g,'')
+    );
+    // Guard: if this looks like the recipes tab (wrong gid), skip it.
+    if (headers.includes('ingredient') || headers.includes('meal')) {
+      console.warn('Extras URL returned a meal/recipe tab — staples skipped. Check EXTRAS_GID.');
+      return;
+    }
+    const cName  = findCol(headers, ['name','item','staple']);
+    const cSizes = findCol(headers, ['sizes','size']);
+    const cBrand = findCol(headers, ['brand','preferred_brand','preferred brand']);
+    const cExact = findCol(headers, ['exact_product','exact product','exact']);
+    const cImg   = findCol(headers, ['imageurl','image_url','image','photo']);
+    if (cName === -1) return;
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCSVLine(lines[i]);
+      if (!cols) continue;
+      const name = (cols[cName] || '').replace(/['"]/g,'').trim();
+      if (!name) continue;
+      const sizesRaw = cSizes !== -1 ? (cols[cSizes] || '').replace(/['"]/g,'').trim() : '';
+      const sizes = sizesRaw ? sizesRaw.split(/[,;|]/).map(s => s.trim()).filter(Boolean) : [];
+      staples.push({
+        name:  name,
+        sizes: sizes,
+        brand: cBrand !== -1 ? (cols[cBrand] || '').replace(/['"]/g,'').trim() : '',
+        exact: cExact !== -1 ? (cols[cExact] || '').replace(/['"]/g,'').trim() : '',
+        image: cImg   !== -1 ? (cols[cImg]   || '').replace(/['"]/g,'').trim() : ''
+      });
     }
   }
 
@@ -1430,6 +1677,9 @@
     // Render pantry section
     renderPantrySection();
 
+    // Render household staples section
+    renderStaplesSection();
+
     // Build email and show send section
     buildMailto();
     document.getElementById('claude-output-section').style.display = 'block';
@@ -1483,6 +1733,112 @@
     buildMailto();
   }
 
+  // ── Render household staples section ──
+  function renderStaplesSection() {
+    const section = document.getElementById('staples-section');
+    if (!staples || staples.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    document.getElementById('staples-count-badge').textContent = staples.length + ' available';
+
+    const listEl = document.getElementById('staples-list');
+    listEl.innerHTML = '';
+    const note = document.createElement('div');
+    note.className   = 'staples-note';
+    note.textContent = 'Non-recipe items you keep stocked. Tick anything you need this week, pick a size and how many.';
+    listEl.appendChild(note);
+
+    staples.forEach(function(s, idx) {
+      const thumb = s.image
+        ? '<img class="staple-thumb" src="' + escAttr(s.image) + '" alt="" loading="lazy" '
+          + 'onerror="this.outerHTML=\'<div class=&quot;staple-thumb-ph&quot;>&#128722;</div>\'">'
+        : '<div class="staple-thumb-ph">&#128722;</div>';
+
+      // Size dropdown — only if this staple has size options.
+      let sizeHtml = '';
+      if (s.sizes && s.sizes.length) {
+        const opts = s.sizes.map(function(sz) {
+          return '<option value="' + escAttr(sz) + '">' + escHtml(sz) + '</option>';
+        }).join('');
+        sizeHtml = '<select class="staple-size" id="staple-size-' + idx + '" onchange="stapleChanged()">' + opts + '</select>';
+      }
+
+      const rowEl = document.createElement('div');
+      rowEl.className = 'staple-row';
+      rowEl.innerHTML =
+        '<input type="checkbox" id="staple-cb-' + idx + '" onchange="stapleChanged()">' +
+        thumb +
+        '<span class="staple-name">' + escHtml(s.name) +
+          (s.brand ? '<span class="staple-brand">' + escHtml(s.brand) + '</span>' : '') +
+        '</span>' +
+        '<span class="staple-controls">' +
+          sizeHtml +
+          '<span class="staple-qty">' +
+            '<button type="button" onclick="stapleQty(' + idx + ',-1)">&minus;</button>' +
+            '<span id="staple-qty-' + idx + '">1</span>' +
+            '<button type="button" onclick="stapleQty(' + idx + ',1)">+</button>' +
+          '</span>' +
+        '</span>';
+      listEl.appendChild(rowEl);
+    });
+
+    // "+ Add Staple" button lives INSIDE the drawer, below the list.
+    const addBtn = document.createElement('button');
+    addBtn.id = 'staples-add-btn';
+    addBtn.textContent = '+ Add a new staple';
+    addBtn.onclick = openAddStaple;
+    listEl.appendChild(addBtn);
+  }
+
+  // ── Toggle staples drawer ──
+  function toggleStaples() {
+    const list  = document.getElementById('staples-list');
+    const label = document.getElementById('staples-toggle-label');
+    const open  = list.style.display !== 'none';
+    list.style.display = open ? 'none' : 'block';
+    label.textContent  = open ? '▶ Add household staples' : '▼ Add household staples';
+  }
+
+  // ── +/- count stepper for a staple ──
+  function stapleQty(idx, delta) {
+    const el  = document.getElementById('staple-qty-' + idx);
+    let n = parseInt(el.textContent, 10) || 1;
+    n = Math.max(1, Math.min(99, n + delta));
+    el.textContent = n;
+    // Ticking the stepper implies you want the item — auto-check it.
+    const cb = document.getElementById('staple-cb-' + idx);
+    if (delta > 0 && cb && !cb.checked) cb.checked = true;
+    stapleChanged();
+  }
+
+  // ── Any staple checkbox / size / qty change → restyle + rebuild email ──
+  function stapleChanged() {
+    document.querySelectorAll('.staple-row').forEach(function(row) {
+      const cb = row.querySelector('input[type="checkbox"]');
+      row.classList.toggle('checked', cb && cb.checked);
+    });
+    buildMailto();
+  }
+
+  // ── Collect the checked staples into order rows ──
+  function collectCheckedStaples() {
+    const out = [];
+    staples.forEach(function(s, idx) {
+      const cb = document.getElementById('staple-cb-' + idx);
+      if (!cb || !cb.checked) return;
+      const sizeEl = document.getElementById('staple-size-' + idx);
+      const qtyEl  = document.getElementById('staple-qty-' + idx);
+      out.push({
+        ingredient: s.name,
+        rawQty:     qtyEl ? (parseInt(qtyEl.textContent, 10) || 1) : 1,
+        totalQty:   null,
+        unit:       sizeEl ? sizeEl.value : (s.sizes[0] || ''),
+        brand:      s.brand || '',
+        exact:      s.exact || ''
+      });
+    });
+    return out;
+  }
+
   // ── Build mailto ──
   var _lastMailtoHref = '#';
   var _lastEmailBody  = '';
@@ -1493,7 +1849,8 @@
       if (cb.checked) checkedPantry.push(pantryIngredients[idx]);
     });
 
-    const finalList  = shopIngredients.concat(checkedPantry);
+    const checkedStaples = collectCheckedStaples();
+    const finalList  = shopIngredients.concat(checkedPantry).concat(checkedStaples);
     const mealList   = Array.from(selected).join(', ');
     const bodyLines  = ['MEALS: ' + mealList, '', 'INGREDIENTS:'];
 
@@ -1501,7 +1858,7 @@
       const qty   = row.totalQty !== null ? row.totalQty : (row.rawQty || '');
       const parts = [(i+1) + '. ' + row.ingredient];
       if (qty)       parts.push('qty:' + qty);
-      if (row.unit)  parts.push('unit:' + row.unit);
+      if (row.unit)  parts.push('unit:' + row.unit);   // for staples, this is the size
       if (row.brand) parts.push('brand:' + row.brand);
       if (row.exact) parts.push('exact:' + row.exact);
       bodyLines.push(parts.join(' | '));
@@ -1616,17 +1973,15 @@
   //  ADD RECIPE FLOW
   // ═════════════════════════════════════════════════════════════
 
-  // Holds the two chosen photos as base64 (without the data: prefix).
+  // Holds the chosen photos as base64 (without the data: prefix).
   let arCardBase64  = null;   // ingredient panel (sent to Claude)
   let arCardMedia   = 'image/jpeg';
   let arFoodDataUrl = null;   // raw (uncropped) finished-dish photo, as a data URL
+  let asPhotoDataUrl = null;  // raw (uncropped) staple photo, as a data URL
 
-  // Final output size of the uploaded dish photo (square, matches card thumbs).
+  // Final output size of the uploaded photos (square, matches card thumbs).
   const AR_OUTPUT_SIZE = 800;          // px — exported image is 800×800
   const AR_PAD_COLOR   = '#E8E0D0';    // card beige, fills any padding
-
-  // Crop box state, in *natural image pixels* (set when the photo loads).
-  let arCrop = null;   // { imgW, imgH, x, y, size }  — size is the square side
 
   // ── Open / close the modal ──
   function openAddRecipe() {
@@ -1638,7 +1993,7 @@
   }
   function resetAddRecipe() {
     arCardBase64 = null; arFoodDataUrl = null; arCardMedia = 'image/jpeg';
-    arCrop = null; arDrag = null;
+    cropCtxRecipe.crop = null; cropCtxRecipe.drag = null;
     document.getElementById('ar-step-upload').style.display = 'block';
     document.getElementById('ar-preview').style.display = 'none';
     document.getElementById('ar-crop-block').style.display = 'none';
@@ -1830,156 +2185,235 @@
   // ═════════════════════════════════════════════════════════════
   //  CROP TOOL  — draggable/resizable square crop, locked to card shape
   // ═════════════════════════════════════════════════════════════
-  // All crop math is stored in NATURAL image pixels (arCrop), then converted
-  // to on-screen pixels for display. This keeps the export crisp regardless of
-  // how big the preview happens to render.
+  // Shared by BOTH the recipe dish photo and the staple photo. Each "context"
+  // names its DOM ids, holds its own crop-state, and chooses a default position
+  // ('right' for HelloFresh dish photos, 'center' for generic staple photos).
+  // All crop math is in NATURAL image pixels, converted to screen px to display.
 
-  function setupCrop() {
-    const block = document.getElementById('ar-crop-block');
-    if (!arFoodDataUrl) { block.style.display = 'none'; arCrop = null; return; }
+  const cropCtxRecipe = {
+    prefix: 'ar', defaultPos: 'right',
+    crop: null, drag: null,
+    get dataUrl() { return arFoodDataUrl; }
+  };
+  const cropCtxStaple = {
+    prefix: 'as', defaultPos: 'center',
+    crop: null, drag: null,
+    get dataUrl() { return asPhotoDataUrl; }
+  };
+
+  function cropEl(ctx, suffix) { return document.getElementById(ctx.prefix + '-crop-' + suffix); }
+
+  function setupCropCtx(ctx) {
+    const block = document.getElementById(ctx.prefix + '-crop-block');
+    if (!ctx.dataUrl) { if (block) block.style.display = 'none'; ctx.crop = null; return; }
     block.style.display = 'block';
-
-    const img = document.getElementById('ar-crop-img');
+    const img = cropEl(ctx, 'img');
     img.onload = function() {
       const iw = img.naturalWidth, ih = img.naturalHeight;
-      // Default crop = the largest square that fits, pinned to the RIGHT side
-      // (HelloFresh dish photo lives on the right). Matches the old auto-crop.
       const size = Math.min(iw, ih);
-      arCrop = { imgW: iw, imgH: ih, size: size, x: iw - size, y: Math.round((ih - size) / 2) };
-      // Defer one frame so the <img> has its on-screen size before we position.
-      requestAnimationFrame(positionCropBox);
+      const x = ctx.defaultPos === 'right' ? (iw - size) : Math.round((iw - size) / 2);
+      ctx.crop = { imgW: iw, imgH: ih, size: size, x: x, y: Math.round((ih - size) / 2) };
+      requestAnimationFrame(function() { positionCropCtx(ctx); });
     };
-    img.src = arFoodDataUrl;
+    img.src = ctx.dataUrl;
   }
 
-  // Ratio between displayed image px and natural image px.
-  function cropScale() {
-    const img = document.getElementById('ar-crop-img');
-    return img.clientWidth / arCrop.imgW;   // uniform (width drives the layout)
+  function cropScaleCtx(ctx) {
+    return cropEl(ctx, 'img').clientWidth / ctx.crop.imgW;
   }
 
-  // Draw the crop box + the four dim shades from the current arCrop values.
-  function positionCropBox() {
-    if (!arCrop) return;
-    const s   = cropScale();
-    const box = document.getElementById('ar-crop-box');
-    const img = document.getElementById('ar-crop-img');
+  function positionCropCtx(ctx) {
+    if (!ctx.crop) return;
+    const s   = cropScaleCtx(ctx);
+    const box = cropEl(ctx, 'box');
+    const img = cropEl(ctx, 'img');
     const dispW = img.clientWidth, dispH = img.clientHeight;
-    const bx = arCrop.x * s, by = arCrop.y * s, bs = arCrop.size * s;
-
-    box.style.left   = bx + 'px';
-    box.style.top    = by + 'px';
-    box.style.width  = bs + 'px';
-    box.style.height = bs + 'px';
-
-    setShade('ar-crop-shade-top',    0,        0,        dispW,            by);
-    setShade('ar-crop-shade-bottom', 0,        by + bs,  dispW,            dispH - (by + bs));
-    setShade('ar-crop-shade-left',   0,        by,       bx,               bs);
-    setShade('ar-crop-shade-right',  bx + bs,  by,       dispW - (bx + bs), bs);
+    const bx = ctx.crop.x * s, by = ctx.crop.y * s, bs = ctx.crop.size * s;
+    box.style.left = bx + 'px'; box.style.top = by + 'px';
+    box.style.width = bs + 'px'; box.style.height = bs + 'px';
+    setShade(ctx, 'top',    0,       0,       dispW,             by);
+    setShade(ctx, 'bottom', 0,       by + bs, dispW,             dispH - (by + bs));
+    setShade(ctx, 'left',   0,       by,      bx,                bs);
+    setShade(ctx, 'right',  bx + bs, by,      dispW - (bx + bs), bs);
   }
 
-  function setShade(id, left, top, w, h) {
-    const el = document.getElementById(id);
+  function setShade(ctx, side, left, top, w, h) {
+    const el = document.getElementById(ctx.prefix + '-crop-shade-' + side);
+    if (!el) return;
     el.style.left = left + 'px'; el.style.top = top + 'px';
     el.style.width = Math.max(0, w) + 'px'; el.style.height = Math.max(0, h) + 'px';
   }
 
-  // ── Pointer drag handling (works for mouse + touch via Pointer Events) ──
-  let arDrag = null;   // { mode:'move'|'nw'|'ne'|'sw'|'se', startX, startY, orig:{x,y,size} }
-
-  function cropPointerDown(e) {
-    if (!arCrop) return;
+  function cropDownCtx(ctx, e) {
+    if (!ctx.crop) return;
     const handle = e.target.classList && e.target.classList.contains('ar-crop-handle')
       ? [...e.target.classList].find(c => ['nw','ne','sw','se'].includes(c))
       : null;
-    arDrag = {
+    ctx.drag = {
       mode: handle || 'move',
       startX: e.clientX, startY: e.clientY,
-      orig: { x: arCrop.x, y: arCrop.y, size: arCrop.size }
+      orig: { x: ctx.crop.x, y: ctx.crop.y, size: ctx.crop.size }
     };
     e.preventDefault();
   }
 
-  function cropPointerMove(e) {
-    if (!arDrag || !arCrop) return;
-    const s  = cropScale();
-    const dxN = (e.clientX - arDrag.startX) / s;   // delta in natural px
-    const dyN = (e.clientY - arDrag.startY) / s;
-    const o   = arDrag.orig;
-    const maxX = arCrop.imgW, maxY = arCrop.imgH;
-    const MIN  = Math.round(Math.min(maxX, maxY) * 0.2);   // min 20% square
+  function cropMoveCtx(ctx, e) {
+    if (!ctx.drag || !ctx.crop) return;
+    const s  = cropScaleCtx(ctx);
+    const dxN = (e.clientX - ctx.drag.startX) / s;
+    const dyN = (e.clientY - ctx.drag.startY) / s;
+    const o   = ctx.drag.orig;
+    const maxX = ctx.crop.imgW, maxY = ctx.crop.imgH;
+    const MIN  = Math.round(Math.min(maxX, maxY) * 0.2);
 
-    if (arDrag.mode === 'move') {
-      arCrop.x = clamp(o.x + dxN, 0, maxX - o.size);
-      arCrop.y = clamp(o.y + dyN, 0, maxY - o.size);
+    if (ctx.drag.mode === 'move') {
+      ctx.crop.x = clamp(o.x + dxN, 0, maxX - o.size);
+      ctx.crop.y = clamp(o.y + dyN, 0, maxY - o.size);
     } else {
-      // Resize keeping it square. The delta along the dragged corner sets size.
-      // We anchor the OPPOSITE corner so the box grows/shrinks naturally.
       let newSize = o.size;
-      if (arDrag.mode === 'se') newSize = o.size + Math.max(dxN, dyN);
-      if (arDrag.mode === 'nw') newSize = o.size - Math.min(dxN, dyN);
-      if (arDrag.mode === 'ne') newSize = o.size + Math.max(dxN, -dyN);
-      if (arDrag.mode === 'sw') newSize = o.size + Math.max(-dxN, dyN);
-
-      // Clamp size so the box stays inside the image given its anchor.
-      let ax = o.x, ay = o.y;   // top-left after resize
-      if (arDrag.mode === 'nw') { ax = o.x + (o.size - newSize); ay = o.y + (o.size - newSize); }
-      if (arDrag.mode === 'ne') { ay = o.y + (o.size - newSize); }
-      if (arDrag.mode === 'sw') { ax = o.x + (o.size - newSize); }
-
-      // Bound the size so anchor + size stays on-image and >= MIN.
+      if (ctx.drag.mode === 'se') newSize = o.size + Math.max(dxN, dyN);
+      if (ctx.drag.mode === 'nw') newSize = o.size - Math.min(dxN, dyN);
+      if (ctx.drag.mode === 'ne') newSize = o.size + Math.max(dxN, -dyN);
+      if (ctx.drag.mode === 'sw') newSize = o.size + Math.max(-dxN, dyN);
       newSize = clamp(newSize, MIN, Math.min(maxX, maxY));
-      if (arDrag.mode === 'se') { ax = o.x; ay = o.y; }
-      if (arDrag.mode === 'nw') { ax = o.x + o.size - newSize; ay = o.y + o.size - newSize; }
-      if (arDrag.mode === 'ne') { ax = o.x; ay = o.y + o.size - newSize; }
-      if (arDrag.mode === 'sw') { ax = o.x + o.size - newSize; ay = o.y; }
-
+      let ax = o.x, ay = o.y;
+      if (ctx.drag.mode === 'se') { ax = o.x; ay = o.y; }
+      if (ctx.drag.mode === 'nw') { ax = o.x + o.size - newSize; ay = o.y + o.size - newSize; }
+      if (ctx.drag.mode === 'ne') { ax = o.x; ay = o.y + o.size - newSize; }
+      if (ctx.drag.mode === 'sw') { ax = o.x + o.size - newSize; ay = o.y; }
       ax = clamp(ax, 0, maxX - newSize);
       ay = clamp(ay, 0, maxY - newSize);
-      arCrop.x = ax; arCrop.y = ay; arCrop.size = newSize;
+      ctx.crop.x = ax; ctx.crop.y = ay; ctx.crop.size = newSize;
     }
-    positionCropBox();
+    positionCropCtx(ctx);
     e.preventDefault();
   }
 
-  function cropPointerUp() { arDrag = null; }
-
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-  // Attach listeners once. The stage handles down; window handles move/up so a
-  // drag that leaves the box still tracks.
+  // Wire both crop stages. Each stage drives its own context; window-level
+  // move/up handlers track whichever context is currently dragging.
   (function attachCropListeners() {
-    const stage = document.getElementById('ar-crop-stage');
-    if (stage) stage.addEventListener('pointerdown', cropPointerDown);
-    window.addEventListener('pointermove', cropPointerMove);
-    window.addEventListener('pointerup',   cropPointerUp);
-    // Reposition the box if the modal/image resizes (e.g. phone rotate).
-    window.addEventListener('resize', function() { if (arCrop) positionCropBox(); });
+    [cropCtxRecipe, cropCtxStaple].forEach(function(ctx) {
+      const stage = cropEl(ctx, 'stage');
+      if (stage) stage.addEventListener('pointerdown', function(e) { cropDownCtx(ctx, e); });
+    });
+    window.addEventListener('pointermove', function(e) {
+      if (cropCtxRecipe.drag) cropMoveCtx(cropCtxRecipe, e);
+      if (cropCtxStaple.drag) cropMoveCtx(cropCtxStaple, e);
+    });
+    window.addEventListener('pointerup', function() {
+      cropCtxRecipe.drag = null; cropCtxStaple.drag = null;
+    });
+    window.addEventListener('resize', function() {
+      if (cropCtxRecipe.crop) positionCropCtx(cropCtxRecipe);
+      if (cropCtxStaple.crop) positionCropCtx(cropCtxStaple);
+    });
   })();
 
-  // ── Export the crop onto a fixed 800×800 canvas, padding with card beige. ──
-  // Returns base64 (no data: prefix). Because the crop box is already square,
-  // padding only appears if the user shrank the box smaller than the source —
-  // we still draw onto a fixed square so every card is identical in shape.
-  function exportCroppedPhoto() {
-    const img = document.getElementById('ar-crop-img');
+  // Export a context's crop onto a fixed 800×800 canvas, padded with card beige.
+  function exportCropCtx(ctx) {
+    const img = cropEl(ctx, 'img');
     const canvas = document.createElement('canvas');
     canvas.width = AR_OUTPUT_SIZE; canvas.height = AR_OUTPUT_SIZE;
-    const ctx = canvas.getContext('2d');
-
-    // Fill the beige background first so any uncovered area is padded, not black.
-    ctx.fillStyle = AR_PAD_COLOR;
-    ctx.fillRect(0, 0, AR_OUTPUT_SIZE, AR_OUTPUT_SIZE);
-
-    if (arCrop) {
-      // The crop is a square region of the source -> scale straight to 800×800.
-      ctx.drawImage(
-        img,
-        arCrop.x, arCrop.y, arCrop.size, arCrop.size,   // source square
-        0, 0, AR_OUTPUT_SIZE, AR_OUTPUT_SIZE             // dest fills the canvas
-      );
+    const c = canvas.getContext('2d');
+    c.fillStyle = AR_PAD_COLOR;
+    c.fillRect(0, 0, AR_OUTPUT_SIZE, AR_OUTPUT_SIZE);
+    if (ctx.crop) {
+      c.drawImage(img, ctx.crop.x, ctx.crop.y, ctx.crop.size, ctx.crop.size,
+                  0, 0, AR_OUTPUT_SIZE, AR_OUTPUT_SIZE);
     }
     return canvas.toDataURL('image/jpeg', 0.88).split(',')[1];
+  }
+
+  // Back-compat wrappers for the recipe flow's existing call sites.
+  function setupCrop()         { setupCropCtx(cropCtxRecipe); }
+  function exportCroppedPhoto(){ return exportCropCtx(cropCtxRecipe); }
+
+  // ═════════════════════════════════════════════════════════════
+  //  ADD STAPLE FLOW
+  // ═════════════════════════════════════════════════════════════
+
+  function openAddStaple() {
+    resetAddStaple();
+    document.getElementById('add-staple-overlay').classList.add('open');
+  }
+  function closeAddStaple() {
+    document.getElementById('add-staple-overlay').classList.remove('open');
+  }
+  function resetAddStaple() {
+    asPhotoDataUrl = null;
+    cropCtxStaple.crop = null; cropCtxStaple.drag = null;
+    ['name','size','brand','exact'].forEach(function(f) {
+      document.getElementById('as-' + f).value = '';
+    });
+    document.getElementById('as-photo-input').value = '';
+    document.getElementById('as-photo-text').textContent = 'Tap to choose or take a photo…';
+    document.getElementById('as-photo-drop').classList.remove('has-file');
+    const thumb = document.getElementById('as-photo-thumb');
+    thumb.classList.remove('show'); thumb.src = '';
+    document.getElementById('as-crop-block').style.display = 'none';
+    asSetStatus('', '');
+    updateStapleSaveBtn();
+  }
+
+  function asSetStatus(msg, type) {
+    const el = document.getElementById('as-status');
+    el.textContent = msg || '';
+    el.className = msg ? type : '';
+  }
+
+  function updateStapleSaveBtn() {
+    const name = document.getElementById('as-name').value.trim();
+    document.getElementById('as-save-btn').disabled = !name;
+  }
+
+  // Staple photo chosen → store raw + show crop box (center default).
+  async function onStaplePhotoChosen(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    asPhotoDataUrl = await readFileAsDataURL(file);
+    const thumb = document.getElementById('as-photo-thumb');
+    thumb.src = asPhotoDataUrl; thumb.classList.add('show');
+    document.getElementById('as-photo-text').textContent = file.name;
+    document.getElementById('as-photo-drop').classList.add('has-file');
+    setupCropCtx(cropCtxStaple);   // reveals + initializes the crop box
+  }
+
+  // Save: append to Extras tab + upload photo (if any), then reload.
+  async function commitStaple() {
+    const name  = document.getElementById('as-name').value.trim();
+    const size  = document.getElementById('as-size').value.trim();
+    const brand = document.getElementById('as-brand').value.trim();
+    const exact = document.getElementById('as-exact').value.trim();
+    if (!name) { asSetStatus('Please enter an item name.', 'error'); return; }
+
+    const btn = document.getElementById('as-save-btn');
+    const orig = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Saving…';
+    asSetStatus('Saving your staple…', 'info');
+    try {
+      const photoBase64 = asPhotoDataUrl ? exportCropCtx(cropCtxStaple) : '';
+      const res = await postToAddRecipe({
+        action: 'commitExtra',
+        name: name,
+        sizes: size,
+        brand: brand,
+        exact: exact,
+        photoBase64: photoBase64
+      });
+      if (!res || !res.ok) throw new Error((res && res.error) || 'Save failed.');
+      asSetStatus('✓ Saved! "' + name + '" will appear after the sheet refreshes.', 'ok');
+      btn.textContent = '✓ Saved';
+      setTimeout(function() {
+        closeAddStaple();
+        showStatus('Refreshing to include "' + name + '"…', 'info');
+        loadAll();
+      }, 1600);
+    } catch (err) {
+      asSetStatus(String(err.message || err), 'error');
+      btn.disabled = false; btn.textContent = orig;
+    }
   }
 
   // ── Attribute-safe escape for values placed inside HTML attributes ──
@@ -1989,9 +2423,9 @@
       .replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  // Close the modal on Escape.
+  // Close the modals on Escape.
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeAddRecipe();
+    if (e.key === 'Escape') { closeAddRecipe(); closeAddStaple(); }
   });
 
   // ── Auto-load on page open ──
