@@ -282,7 +282,7 @@
       gap: 0;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       overflow: hidden;
-      min-height: 90px;
+      height: 96px;        /* fixed height → every card is the same shape */
     }
 
     .meal-card:hover {
@@ -296,22 +296,21 @@
       box-shadow: 0 4px 16px rgba(6,122,69,0.2);
     }
 
-    /* Thumbnail on the left */
+    /* Thumbnail on the left — fixed square, always the same size */
     .meal-thumb {
-      width: 90px;
-      min-width: 90px;
-      height: 100%;
-      min-height: 90px;
-      object-fit: cover;
+      width: 96px;
+      min-width: 96px;
+      height: 96px;
+      object-fit: cover;   /* fills the square, center-cropped, no distortion */
       display: block;
       background: #E8E0D0;
       flex-shrink: 0;
     }
 
     .meal-thumb-placeholder {
-      width: 90px;
-      min-width: 90px;
-      min-height: 90px;
+      width: 96px;
+      min-width: 96px;
+      height: 96px;
       background: #E8E0D0;
       flex-shrink: 0;
       display: flex;
@@ -322,12 +321,14 @@
 
     /* Text content on the right */
     .meal-card-body {
-      padding: 14px 16px 14px 14px;
+      padding: 12px 16px 12px 14px;
       display: flex;
       flex-direction: column;
+      justify-content: center;   /* center text vertically in the fixed card */
       gap: 4px;
       flex: 1;
       min-width: 0;
+      overflow: hidden;
     }
 
     .meal-card .check-badge {
@@ -366,6 +367,11 @@
       line-height: 1.05;
       color: #343434;
       transition: color 0.15s;
+      /* Clamp long names to 2 lines with an ellipsis so cards stay uniform */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .meal-card.selected .meal-name { color: #fff; }
@@ -652,10 +658,10 @@
     #meal-search {
       width: 100%;
       padding: 12px 44px 12px 18px;
-      background: #1a1a1a;
-      border: 1px solid #333;
+      background: #E8E0D0;
+      border: 1px solid #DCD2BE;
       border-radius: 50px;
-      color: #f0f0f0;
+      color: #343434;
       font-size: 16px;
       font-family: 'Barlow', sans-serif;
       outline: none;
@@ -663,7 +669,7 @@
       transition: border-color 0.15s;
     }
     #meal-search:focus { border-color: #067A45; }
-    #meal-search::placeholder { color: #666; }
+    #meal-search::placeholder { color: #343434; }
     /* hide the native clear button so our icon stays clean */
     #meal-search::-webkit-search-cancel-button { -webkit-appearance: none; }
     #search-icon {
@@ -672,7 +678,7 @@
       top: 50%;
       transform: translateY(-50%);
       font-size: 18px;
-      color: #555;
+      color: #888;
       pointer-events: none;
     }
 
@@ -836,6 +842,52 @@
       font-size: 12px; color: #aaa; font-style: italic;
       margin: 14px 0 6px; line-height: 1.4;
     }
+
+    /* ── Crop tool ── */
+    #ar-crop-stage {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      user-select: none;
+      touch-action: none;       /* let us handle touch drags ourselves */
+      line-height: 0;
+      background: #E8E0D0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    #ar-crop-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      pointer-events: none;     /* drags go to the box/stage, not the img */
+    }
+    /* The four dimmed panels outside the crop box */
+    #ar-crop-shade-top, #ar-crop-shade-bottom,
+    #ar-crop-shade-left, #ar-crop-shade-right {
+      position: absolute;
+      background: rgba(52,52,52,0.45);
+      pointer-events: none;
+    }
+    #ar-crop-box {
+      position: absolute;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+      cursor: move;
+      box-sizing: border-box;
+    }
+    .ar-crop-handle {
+      position: absolute;
+      width: 16px; height: 16px;
+      background: #fff;
+      border: 2px solid #067A45;
+      border-radius: 50%;
+      box-sizing: border-box;
+    }
+    .ar-crop-handle.nw { top: -9px;  left: -9px;  cursor: nwse-resize; }
+    .ar-crop-handle.ne { top: -9px;  right: -9px; cursor: nesw-resize; }
+    .ar-crop-handle.sw { bottom: -9px; left: -9px; cursor: nesw-resize; }
+    .ar-crop-handle.se { bottom: -9px; right: -9px; cursor: nwse-resize; }
   </style>
 </head>
 <body>
@@ -936,7 +988,7 @@
           <span class="ar-file-icon">&#128247;</span>
           <img class="ar-thumb" id="ar-card-thumb" alt="">
           <span class="ar-file-text" id="ar-card-text">Tap to choose or take a photo…</span>
-          <input type="file" id="ar-card-input" accept="image/*" onchange="onCardChosen(this)">
+          <input type="file" id="ar-card-input" accept="image/*" capture="environment" onchange="onCardChosen(this)">
         </div>
       </div>
 
@@ -946,7 +998,7 @@
           <span class="ar-file-icon">&#127869;</span>
           <img class="ar-thumb" id="ar-food-thumb" alt="">
           <span class="ar-file-text" id="ar-food-text">Tap to choose or take a photo…</span>
-          <input type="file" id="ar-food-input" accept="image/*" onchange="onFoodChosen(this)">
+          <input type="file" id="ar-food-input" accept="image/*" capture="environment" onchange="onFoodChosen(this)">
         </div>
       </div>
 
@@ -975,6 +1027,27 @@
         <tbody id="ar-ing-body"></tbody>
       </table>
       <button id="ar-add-ing-btn" onclick="addIngredientRow()">+ Add ingredient</button>
+
+      <!-- Photo crop -->
+      <div id="ar-crop-block" style="display:none">
+        <label style="display:block;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin:22px 0 8px;">Dish photo · drag to crop</label>
+        <div id="ar-crop-stage">
+          <img id="ar-crop-img" alt="">
+          <div id="ar-crop-box">
+            <span class="ar-crop-handle nw"></span>
+            <span class="ar-crop-handle ne"></span>
+            <span class="ar-crop-handle sw"></span>
+            <span class="ar-crop-handle se"></span>
+          </div>
+          <!-- dimmed overlay outside the crop box -->
+          <div id="ar-crop-shade-top"></div>
+          <div id="ar-crop-shade-bottom"></div>
+          <div id="ar-crop-shade-left"></div>
+          <div id="ar-crop-shade-right"></div>
+        </div>
+        <p class="ar-preview-note">Drag the box to move it; drag a corner to resize. The box keeps the square shape your meal cards use. Anything outside it is trimmed.</p>
+      </div>
+
       <p class="ar-preview-note">Check Claude's reading and fix anything that looks off. When you confirm, this meal is saved to your sheet and the dish photo is uploaded.</p>
       <div class="ar-actions">
         <button class="ar-btn-primary" id="ar-confirm-btn" onclick="commitRecipe()">Save Recipe</button>
@@ -1546,7 +1619,14 @@
   // Holds the two chosen photos as base64 (without the data: prefix).
   let arCardBase64  = null;   // ingredient panel (sent to Claude)
   let arCardMedia   = 'image/jpeg';
-  let arFoodBase64  = null;   // cropped finished-dish photo (uploaded to GitHub)
+  let arFoodDataUrl = null;   // raw (uncropped) finished-dish photo, as a data URL
+
+  // Final output size of the uploaded dish photo (square, matches card thumbs).
+  const AR_OUTPUT_SIZE = 800;          // px — exported image is 800×800
+  const AR_PAD_COLOR   = '#E8E0D0';    // card beige, fills any padding
+
+  // Crop box state, in *natural image pixels* (set when the photo loads).
+  let arCrop = null;   // { imgW, imgH, x, y, size }  — size is the square side
 
   // ── Open / close the modal ──
   function openAddRecipe() {
@@ -1557,9 +1637,11 @@
     document.getElementById('add-recipe-overlay').classList.remove('open');
   }
   function resetAddRecipe() {
-    arCardBase64 = null; arFoodBase64 = null; arCardMedia = 'image/jpeg';
+    arCardBase64 = null; arFoodDataUrl = null; arCardMedia = 'image/jpeg';
+    arCrop = null; arDrag = null;
     document.getElementById('ar-step-upload').style.display = 'block';
     document.getElementById('ar-preview').style.display = 'none';
+    document.getElementById('ar-crop-block').style.display = 'none';
     document.getElementById('ar-ing-body').innerHTML = '';
     document.getElementById('ar-meal-name').value = '';
     arSetStatus('', '');
@@ -1603,40 +1685,17 @@
     updateUploadBtn();
   }
 
-  // ── Food photo chosen: crop to the right ~60% before storing ──
+  // ── Food photo chosen: just store the raw photo. Cropping happens on the
+  //    preview step now, so the user can see and adjust it. ──
   async function onFoodChosen(input) {
     const file = input.files && input.files[0];
     if (!file) return;
-    const dataUrl = await readFileAsDataURL(file);
-    const cropped = await cropRight60(dataUrl);   // returns base64 (no prefix)
-    arFoodBase64  = cropped.base64;
+    arFoodDataUrl = await readFileAsDataURL(file);
     const thumb = document.getElementById('ar-food-thumb');
-    thumb.src = cropped.dataUrl; thumb.classList.add('show');
-    document.getElementById('ar-food-text').textContent = file.name + ' (cropped)';
+    thumb.src = arFoodDataUrl; thumb.classList.add('show');
+    document.getElementById('ar-food-text').textContent = file.name;
     document.getElementById('ar-food-drop').classList.add('has-file');
     updateUploadBtn();
-  }
-
-  // ── Crop an image to its right 60% using a canvas, return JPEG base64 ──
-  function cropRight60(dataUrl) {
-    return new Promise(function(resolve, reject) {
-      const img = new Image();
-      img.onload = function() {
-        const cropFrac  = 0.60;                       // keep the right 60%
-        const startX    = Math.round(img.width * (1 - cropFrac));
-        const cropW     = img.width - startX;
-        const cropH     = img.height;
-        const canvas    = document.createElement('canvas');
-        canvas.width    = cropW;
-        canvas.height   = cropH;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, startX, 0, cropW, cropH, 0, 0, cropW, cropH);
-        const out = canvas.toDataURL('image/jpeg', 0.88);
-        resolve({ dataUrl: out, base64: out.split(',')[1] });
-      };
-      img.onerror = reject;
-      img.src = dataUrl;
-    });
   }
 
   function updateUploadBtn() {
@@ -1685,13 +1744,14 @@
     }
   }
 
-  // ── Render the editable ingredient table ──
+  // ── Render the editable ingredient table (+ set up the crop tool) ──
   function renderPreview(meal, ingredients) {
     document.getElementById('ar-meal-name').value = meal || '';
     const body = document.getElementById('ar-ing-body');
     body.innerHTML = '';
     (ingredients || []).forEach(function(ing) { appendIngRow(ing); });
     if (!ingredients || ingredients.length === 0) appendIngRow({});
+    setupCrop();   // show + initialize the photo crop box if a photo was chosen
   }
 
   function appendIngRow(ing) {
@@ -1743,11 +1803,14 @@
     btn.disabled = true; btn.textContent = 'Saving…';
     arSetStatus('Saving your recipe and uploading the photo…', 'info');
     try {
+      // Produce the final cropped + padded square photo from the user's crop box.
+      const foodPhotoBase64 = arFoodDataUrl ? exportCroppedPhoto() : '';
+
       const res = await postToAddRecipe({
         action: 'commit',
         meal: meal,
         ingredients: ingredients,
-        foodPhotoBase64: arFoodBase64 || ''
+        foodPhotoBase64: foodPhotoBase64
       });
       if (!res || !res.ok) throw new Error((res && res.error) || 'Save failed.');
       arSetStatus('✓ Saved! "' + meal + '" will appear after the sheet refreshes.', 'ok');
@@ -1762,6 +1825,161 @@
       arSetStatus(String(err.message || err), 'error');
       btn.disabled = false; btn.textContent = orig;
     }
+  }
+
+  // ═════════════════════════════════════════════════════════════
+  //  CROP TOOL  — draggable/resizable square crop, locked to card shape
+  // ═════════════════════════════════════════════════════════════
+  // All crop math is stored in NATURAL image pixels (arCrop), then converted
+  // to on-screen pixels for display. This keeps the export crisp regardless of
+  // how big the preview happens to render.
+
+  function setupCrop() {
+    const block = document.getElementById('ar-crop-block');
+    if (!arFoodDataUrl) { block.style.display = 'none'; arCrop = null; return; }
+    block.style.display = 'block';
+
+    const img = document.getElementById('ar-crop-img');
+    img.onload = function() {
+      const iw = img.naturalWidth, ih = img.naturalHeight;
+      // Default crop = the largest square that fits, pinned to the RIGHT side
+      // (HelloFresh dish photo lives on the right). Matches the old auto-crop.
+      const size = Math.min(iw, ih);
+      arCrop = { imgW: iw, imgH: ih, size: size, x: iw - size, y: Math.round((ih - size) / 2) };
+      // Defer one frame so the <img> has its on-screen size before we position.
+      requestAnimationFrame(positionCropBox);
+    };
+    img.src = arFoodDataUrl;
+  }
+
+  // Ratio between displayed image px and natural image px.
+  function cropScale() {
+    const img = document.getElementById('ar-crop-img');
+    return img.clientWidth / arCrop.imgW;   // uniform (width drives the layout)
+  }
+
+  // Draw the crop box + the four dim shades from the current arCrop values.
+  function positionCropBox() {
+    if (!arCrop) return;
+    const s   = cropScale();
+    const box = document.getElementById('ar-crop-box');
+    const img = document.getElementById('ar-crop-img');
+    const dispW = img.clientWidth, dispH = img.clientHeight;
+    const bx = arCrop.x * s, by = arCrop.y * s, bs = arCrop.size * s;
+
+    box.style.left   = bx + 'px';
+    box.style.top    = by + 'px';
+    box.style.width  = bs + 'px';
+    box.style.height = bs + 'px';
+
+    setShade('ar-crop-shade-top',    0,        0,        dispW,            by);
+    setShade('ar-crop-shade-bottom', 0,        by + bs,  dispW,            dispH - (by + bs));
+    setShade('ar-crop-shade-left',   0,        by,       bx,               bs);
+    setShade('ar-crop-shade-right',  bx + bs,  by,       dispW - (bx + bs), bs);
+  }
+
+  function setShade(id, left, top, w, h) {
+    const el = document.getElementById(id);
+    el.style.left = left + 'px'; el.style.top = top + 'px';
+    el.style.width = Math.max(0, w) + 'px'; el.style.height = Math.max(0, h) + 'px';
+  }
+
+  // ── Pointer drag handling (works for mouse + touch via Pointer Events) ──
+  let arDrag = null;   // { mode:'move'|'nw'|'ne'|'sw'|'se', startX, startY, orig:{x,y,size} }
+
+  function cropPointerDown(e) {
+    if (!arCrop) return;
+    const handle = e.target.classList && e.target.classList.contains('ar-crop-handle')
+      ? [...e.target.classList].find(c => ['nw','ne','sw','se'].includes(c))
+      : null;
+    arDrag = {
+      mode: handle || 'move',
+      startX: e.clientX, startY: e.clientY,
+      orig: { x: arCrop.x, y: arCrop.y, size: arCrop.size }
+    };
+    e.preventDefault();
+  }
+
+  function cropPointerMove(e) {
+    if (!arDrag || !arCrop) return;
+    const s  = cropScale();
+    const dxN = (e.clientX - arDrag.startX) / s;   // delta in natural px
+    const dyN = (e.clientY - arDrag.startY) / s;
+    const o   = arDrag.orig;
+    const maxX = arCrop.imgW, maxY = arCrop.imgH;
+    const MIN  = Math.round(Math.min(maxX, maxY) * 0.2);   // min 20% square
+
+    if (arDrag.mode === 'move') {
+      arCrop.x = clamp(o.x + dxN, 0, maxX - o.size);
+      arCrop.y = clamp(o.y + dyN, 0, maxY - o.size);
+    } else {
+      // Resize keeping it square. The delta along the dragged corner sets size.
+      // We anchor the OPPOSITE corner so the box grows/shrinks naturally.
+      let newSize = o.size;
+      if (arDrag.mode === 'se') newSize = o.size + Math.max(dxN, dyN);
+      if (arDrag.mode === 'nw') newSize = o.size - Math.min(dxN, dyN);
+      if (arDrag.mode === 'ne') newSize = o.size + Math.max(dxN, -dyN);
+      if (arDrag.mode === 'sw') newSize = o.size + Math.max(-dxN, dyN);
+
+      // Clamp size so the box stays inside the image given its anchor.
+      let ax = o.x, ay = o.y;   // top-left after resize
+      if (arDrag.mode === 'nw') { ax = o.x + (o.size - newSize); ay = o.y + (o.size - newSize); }
+      if (arDrag.mode === 'ne') { ay = o.y + (o.size - newSize); }
+      if (arDrag.mode === 'sw') { ax = o.x + (o.size - newSize); }
+
+      // Bound the size so anchor + size stays on-image and >= MIN.
+      newSize = clamp(newSize, MIN, Math.min(maxX, maxY));
+      if (arDrag.mode === 'se') { ax = o.x; ay = o.y; }
+      if (arDrag.mode === 'nw') { ax = o.x + o.size - newSize; ay = o.y + o.size - newSize; }
+      if (arDrag.mode === 'ne') { ax = o.x; ay = o.y + o.size - newSize; }
+      if (arDrag.mode === 'sw') { ax = o.x + o.size - newSize; ay = o.y; }
+
+      ax = clamp(ax, 0, maxX - newSize);
+      ay = clamp(ay, 0, maxY - newSize);
+      arCrop.x = ax; arCrop.y = ay; arCrop.size = newSize;
+    }
+    positionCropBox();
+    e.preventDefault();
+  }
+
+  function cropPointerUp() { arDrag = null; }
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  // Attach listeners once. The stage handles down; window handles move/up so a
+  // drag that leaves the box still tracks.
+  (function attachCropListeners() {
+    const stage = document.getElementById('ar-crop-stage');
+    if (stage) stage.addEventListener('pointerdown', cropPointerDown);
+    window.addEventListener('pointermove', cropPointerMove);
+    window.addEventListener('pointerup',   cropPointerUp);
+    // Reposition the box if the modal/image resizes (e.g. phone rotate).
+    window.addEventListener('resize', function() { if (arCrop) positionCropBox(); });
+  })();
+
+  // ── Export the crop onto a fixed 800×800 canvas, padding with card beige. ──
+  // Returns base64 (no data: prefix). Because the crop box is already square,
+  // padding only appears if the user shrank the box smaller than the source —
+  // we still draw onto a fixed square so every card is identical in shape.
+  function exportCroppedPhoto() {
+    const img = document.getElementById('ar-crop-img');
+    const canvas = document.createElement('canvas');
+    canvas.width = AR_OUTPUT_SIZE; canvas.height = AR_OUTPUT_SIZE;
+    const ctx = canvas.getContext('2d');
+
+    // Fill the beige background first so any uncovered area is padded, not black.
+    ctx.fillStyle = AR_PAD_COLOR;
+    ctx.fillRect(0, 0, AR_OUTPUT_SIZE, AR_OUTPUT_SIZE);
+
+    if (arCrop) {
+      // The crop is a square region of the source -> scale straight to 800×800.
+      ctx.drawImage(
+        img,
+        arCrop.x, arCrop.y, arCrop.size, arCrop.size,   // source square
+        0, 0, AR_OUTPUT_SIZE, AR_OUTPUT_SIZE             // dest fills the canvas
+      );
+    }
+    return canvas.toDataURL('image/jpeg', 0.88).split(',')[1];
   }
 
   // ── Attribute-safe escape for values placed inside HTML attributes ──
