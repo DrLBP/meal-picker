@@ -226,6 +226,10 @@
       gap: 12px;
     }
 
+    .controls-row--centered {
+      justify-content: center;
+    }
+
     .controls-left {
       display: flex;
       gap: 10px;
@@ -281,7 +285,9 @@
       font-size: 14px;
       font-weight: 600;
       color: #067A45;
-      display: none;
+      min-height: 20px;
+      display: block;
+      visibility: hidden;
     }
 
     /* ── Meal Grid ── */
@@ -1068,18 +1074,18 @@
       <span id="search-icon">&#9906;</span>
       <button id="search-clear-btn" onclick="clearSearch()" title="Clear search">&#10005;</button>
     </div>
-    <div class="controls-row">
-      <div class="controls-left">
-        <button class="btn-outline" onclick="selectAll()">Select All</button>
-        <button class="btn-outline muted" onclick="clearAll()">Clear</button>
-        <button class="btn-add-recipe" onclick="openAddRecipe()">+ Add Recipe</button>
-      </div>
-      <div class="controls-right">
-        <span id="selected-count"></span>
-        <button id="shop-btn" onclick="generateShoppingList()" disabled>
-          Build Shopping List →
-        </button>
-      </div>
+    <div class="controls-row controls-row--centered">
+      <button class="btn-outline" onclick="selectAll()">Select All</button>
+      <button class="btn-outline muted" onclick="clearAll()">Clear</button>
+      <button class="btn-add-recipe" onclick="openAddRecipe()">+ Add Recipe</button>
+    </div>
+    <div class="controls-row controls-row--centered">
+      <span id="selected-count">&nbsp;</span>
+    </div>
+    <div class="controls-row controls-row--centered">
+      <button id="shop-btn" onclick="generateShoppingList()" disabled>
+        Build Shopping List →
+      </button>
     </div>
   </div>
   <div id="meal-grid"></div>
@@ -1665,13 +1671,13 @@
     const btn     = document.getElementById('shop-btn');
     const countEl = document.getElementById('selected-count');
     btn.disabled  = selected.size === 0;
+    btn.textContent = 'Build Shopping List →';
     if (selected.size > 0) {
-      btn.textContent       = 'Build Shopping List (' + selected.size + ') →';
-      countEl.textContent   = selected.size + ' meal' + (selected.size !== 1 ? 's' : '') + ' selected';
-      countEl.style.display = 'block';
+      countEl.textContent      = selected.size + ' meal' + (selected.size !== 1 ? 's' : '') + ' selected';
+      countEl.style.visibility = 'visible';
     } else {
-      btn.textContent       = 'Build Shopping List →';
-      countEl.style.display = 'none';
+      countEl.textContent      = ' ';  // non-breaking space keeps the row height
+      countEl.style.visibility = 'hidden';
     }
   }
 
