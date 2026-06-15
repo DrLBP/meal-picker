@@ -205,21 +205,25 @@
     /* ── Controls bar ── */
     .controls {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 28px;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
       position: sticky;
       top: 0;
       z-index: 100;
       background: #FEF9EF;
-      padding: 12px 0;
+      padding: 12px 24px;
       margin-left: -24px;
       margin-right: -24px;
-      padding-left: 24px;
-      padding-right: 24px;
       border-bottom: 1.5px solid #E8E0D0;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .controls-left {
@@ -743,35 +747,53 @@
     /* ── Search bar ── */
     #search-bar-wrap {
       position: relative;
-      max-width: 420px;
-      margin: 0 auto 20px;
+      width: 100%;
+      margin-bottom: 10px;
     }
     #meal-search {
       width: 100%;
-      padding: 12px 44px 12px 18px;
+      padding: 10px 44px 10px 18px;
       background: #E8E0D0;
       border: 1px solid #DCD2BE;
       border-radius: 50px;
       color: #343434;
-      font-size: 16px;
+      font-size: 15px;
       font-family: 'Barlow', sans-serif;
       outline: none;
       box-sizing: border-box;
       transition: border-color 0.15s;
     }
     #meal-search:focus { border-color: #067A45; }
-    #meal-search::placeholder { color: #343434; }
-    /* hide the native clear button so our icon stays clean */
+    #meal-search::placeholder { color: #888; }
     #meal-search::-webkit-search-cancel-button { -webkit-appearance: none; }
     #search-icon {
       position: absolute;
-      right: 16px;
+      right: 14px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 18px;
+      font-size: 16px;
       color: #888;
       pointer-events: none;
     }
+    #search-clear-btn {
+      display: none;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #C8BFB0;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      line-height: 20px;
+      text-align: center;
+      cursor: pointer;
+      color: #fff;
+      padding: 0;
+    }
+    #search-clear-btn:hover { background: #343434; }
 
     /* ── Add Recipe button (sits next to Select All / Clear) ── */
     .btn-add-recipe {
@@ -1040,21 +1062,24 @@
 
 <!-- ── Meal Selection ── -->
 <div id="meal-section">
-  <div id="search-bar-wrap">
-    <input id="meal-search" type="search" placeholder="Search meals…" oninput="filterMeals(this.value)" autocomplete="off" />
-    <span id="search-icon">&#9906;</span>
-  </div>
   <div class="controls">
-    <div class="controls-left">
-      <button class="btn-outline" onclick="selectAll()">Select All</button>
-      <button class="btn-outline muted" onclick="clearAll()">Clear</button>
-      <button class="btn-add-recipe" onclick="openAddRecipe()">+ Add Recipe</button>
+    <div id="search-bar-wrap">
+      <input id="meal-search" type="search" placeholder="Search meals…" oninput="onSearchInput(this.value)" autocomplete="off" />
+      <span id="search-icon">&#9906;</span>
+      <button id="search-clear-btn" onclick="clearSearch()" title="Clear search">&#10005;</button>
     </div>
-    <div class="controls-right">
-      <span id="selected-count"></span>
-      <button id="shop-btn" onclick="generateShoppingList()" disabled>
-        Build Shopping List →
-      </button>
+    <div class="controls-row">
+      <div class="controls-left">
+        <button class="btn-outline" onclick="selectAll()">Select All</button>
+        <button class="btn-outline muted" onclick="clearAll()">Clear</button>
+        <button class="btn-add-recipe" onclick="openAddRecipe()">+ Add Recipe</button>
+      </div>
+      <div class="controls-right">
+        <span id="selected-count"></span>
+        <button id="shop-btn" onclick="generateShoppingList()" disabled>
+          Build Shopping List →
+        </button>
+      </div>
     </div>
   </div>
   <div id="meal-grid"></div>
@@ -1595,6 +1620,22 @@
       if (match) visible++;
     });
     document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  function onSearchInput(value) {
+    filterMeals(value);
+    const clearBtn  = document.getElementById('search-clear-btn');
+    const searchIcon = document.getElementById('search-icon');
+    const hasText   = value.length > 0;
+    clearBtn.style.display  = hasText ? 'block' : 'none';
+    searchIcon.style.display = hasText ? 'none' : 'block';
+  }
+
+  function clearSearch() {
+    const input = document.getElementById('meal-search');
+    input.value = '';
+    onSearchInput('');
+    input.focus();
   }
 
   function toggleMeal(name, card) {
