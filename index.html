@@ -458,9 +458,9 @@
 
     .ingredient-row:last-child { border-bottom: none; }
 
-    .ing-name  { color: #343434; font-weight: 500; }
-    .ing-qty   { color: #888; font-size: 13px; text-align: right; }
-    .ing-brand { color: #aaa; font-size: 12px; font-style: italic; }
+    .ing-name  { color: #343434; font-weight: 500; flex: 1; min-width: 0; }
+    .ing-qty   { color: #888; font-size: 13px; text-align: right; flex-shrink: 0; margin-left: 12px; }
+    .ing-brand { color: #aaa; font-size: 12px; font-style: italic; font-weight: 400; margin-left: 6px; }
 
     /* ── Send to Claude ── */
     #claude-output-section {
@@ -1726,10 +1726,10 @@
       const qtyStr = qty ? (qty + (row.unit ? ' ' + row.unit : '')) : '';
       const r      = document.createElement('div');
       r.className  = 'ingredient-row';
-      r.innerHTML  = '<span class="ing-name">' + escHtml(row.ingredient) + '</span>'
-        + '<span><span class="ing-qty">' + escHtml(qtyStr) + '</span>'
-        + (row.brand ? '<br/><span class="ing-brand">' + escHtml(row.brand) + '</span>' : '')
-        + '</span>';
+      r.innerHTML  = '<span class="ing-name">' + escHtml(row.ingredient)
+        + (row.brand ? '<span class="ing-brand">· ' + escHtml(row.brand) + '</span>' : '')
+        + '</span>'
+        + '<span class="ing-qty">' + escHtml(qtyStr) + '</span>';
       listEl.appendChild(r);
     }
     document.getElementById('preview-section').style.display = 'block';
