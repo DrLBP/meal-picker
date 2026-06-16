@@ -1915,16 +1915,31 @@
     const mealList   = Array.from(selected).join(', ');
     const bodyLines  = ['MEALS: ' + mealList, '', 'INGREDIENTS:'];
 
+    // Build human-readable lines and structured data simultaneously
+    const dataIngredients = [];
     finalList.forEach(function(row, i) {
-      const qty   = row.totalQty !== null ? row.totalQty : (row.rawQty || '');
-      const parts = [(i+1) + '. ' + row.ingredient];
-      if (qty)       parts.push('qty:' + qty);
-      if (row.unit)  parts.push('unit:' + row.unit);   // for staples, this is the size
-      if (row.brand) parts.push('brand:' + row.brand);
-      if (row.exact) parts.push('exact:' + row.exact);
-      bodyLines.push(parts.join(' | '));
+      const qty = row.totalQty !== null ? row.totalQty : (row.rawQty || '');
+      // Human-readable line: "1. Crispy Fried Onions — 1 unit (Signature SELECT)"
+      let readable = (i+1) + '. ' + row.ingredient;
+      if (qty && row.unit && row.unit !== 'unit') readable += ' — ' + qty + ' ' + row.unit;
+      else if (qty) readable += ' — ' + qty;
+      if (row.exact)  readable += ' (' + row.exact + ')';
+      else if (row.brand) readable += ' (' + row.brand + ')';
+      bodyLines.push(readable);
+      // Structured data for the parser
+      dataIngredients.push({
+        ingredient: row.ingredient,
+        qty:   String(qty),
+        unit:  row.unit  || '',
+        brand: row.brand || '',
+        exact: row.exact || ''
+      });
     });
-    bodyLines.push('', '---', 'Sent from Grocery Meal Picker');
+
+    // Append machine-readable JSON payload on its own line — parser uses this,
+    // ignores everything above. Single line so iPhone cannot break it.
+    const dataPayload = JSON.stringify({ meals: Array.from(selected), ingredients: dataIngredients });
+    bodyLines.push('', '---', 'Sent from Grocery Meal Picker', '', 'DATA:' + dataPayload);
 
     _lastEmailBody  = bodyLines.join('\n');
     _lastMailtoHref = 'mailto:DashAndClaude@gmail.com?subject=' + encodeURIComponent('Shop Groceries') + '&body=' + encodeURIComponent(_lastEmailBody);
