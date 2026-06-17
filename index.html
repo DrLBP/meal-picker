@@ -1108,6 +1108,19 @@
   </div>
 </div>
 
+<!-- ── Shopper picker overlay ── -->
+<div id="shopper-picker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#FEF9EF;border:2px solid #343434;border-radius:12px;padding:32px 28px;max-width:320px;width:90%;text-align:center;font-family:Barlow,Arial,sans-serif;">
+    <p style="margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#888;">Who's shopping?</p>
+    <p style="margin:0 0 24px;font-size:15px;color:#343434;">Confirmation email goes to whoever shops.</p>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button onclick="selectShopper('dashporter@gmail.com')" style="flex:1;padding:14px 0;background:#343434;color:#FEF9EF;border:none;border-radius:8px;font-size:16px;font-family:Barlow,Arial,sans-serif;font-weight:600;cursor:pointer;">Dash</button>
+      <button onclick="selectShopper('em.hamilton.vt@gmail.com')" style="flex:1;padding:14px 0;background:#343434;color:#FEF9EF;border:none;border-radius:8px;font-size:16px;font-family:Barlow,Arial,sans-serif;font-weight:600;cursor:pointer;">Emily</button>
+    </div>
+    <button onclick="hidePicker()" style="margin-top:16px;background:none;border:none;color:#888;font-size:13px;cursor:pointer;font-family:Barlow,Arial,sans-serif;">Cancel</button>
+  </div>
+</div>
+
 <!-- ── Send to Claude ── -->
 <div id="claude-output-section">
   <div class="section-divider" style="padding:0;margin:0 auto 24px;max-width:900px;padding:0 24px;"><hr></div>
@@ -1936,9 +1949,10 @@
       });
     });
 
-    // Append machine-readable JSON payload on its own line — parser uses this,
-    // ignores everything above. Single line so iPhone cannot break it.
-    const dataPayload = JSON.stringify({ meals: Array.from(selected), ingredients: dataIngredients });
+    // Append machine-readable payload — base64 encoded so iPhone cannot
+    // line-wrap it (no spaces = nothing to break on).
+    const dataJson    = JSON.stringify({ meals: Array.from(selected), ingredients: dataIngredients });
+    const dataPayload = btoa(unescape(encodeURIComponent(dataJson)));
     bodyLines.push('', '---', 'Sent from Grocery Meal Picker', '', 'DATA:' + dataPayload);
 
     _lastEmailBody  = bodyLines.join('\n');
@@ -1946,14 +1960,48 @@
     document.getElementById('send-email-btn').href = _lastMailtoHref;
   }
 
+  // ── Shopper picker ──
+  var _shopperEmail = null;
+
+  const SHOPPERS = [
+    { name: 'Dash',  email: 'dashporter@gmail.com' },
+    { name: 'Emily', email: 'em.hamilton.vt@gmail.com' },
+  ];
+
+  function showShopperPicker() {
+    document.getElementById('shopper-picker').style.display = 'flex';
+  }
+
+  function hidePicker() {
+    document.getElementById('shopper-picker').style.display = 'none';
+  }
+
+  function selectShopper(email) {
+    _shopperEmail = email;
+    hidePicker();
+    doSend();
+  }
+
   // ── Send button: one-tap send via Apps Script, mailto as fallback ──
   async function handleSendClick(e) {
     e.preventDefault();
     if (_lastMailtoHref === '#') return;
 
-    // Preferred path on DESKTOP: send directly through the Apps Script mailer.
-    // On phones we skip this so the mail app opens and the reply goes to the sender.
-    if (SEND_ENDPOINT && !IS_MOBILE) {
+    // Ask who's shopping so the confirmation goes to the right inbox
+    if (SEND_ENDPOINT) {
+      showShopperPicker();
+      return; // doSend() is called after shopper is selected
+    }
+
+    // mailto fallback (no Apps Script configured)
+    window.location.href = _lastMailtoHref;
+    setTimeout(function() {
+      if (document.visibilityState === 'visible') showFallback();
+    }, 1500);
+  }
+
+  async function doSend() {
+    if (SEND_ENDPOINT) {
       const btn      = document.getElementById('send-email-btn');
       const original = btn.textContent;
       btn.textContent = 'Sending…';
@@ -1961,9 +2009,12 @@
       try {
         const r = await fetch(SEND_ENDPOINT, {
           method: 'POST',
-          // Plain string body avoids a CORS preflight, which Apps Script
-          // doesn't support. The script JSON-parses it on its side.
-          body: JSON.stringify({ token: SEND_TOKEN, subject: 'Shop Groceries', body: _lastEmailBody })
+          body: JSON.stringify({
+            token:   SEND_TOKEN,
+            subject: 'Shop Groceries',
+            body:    _lastEmailBody,
+            replyTo: _shopperEmail || 'dashporter@gmail.com',
+          })
         });
         const res = await r.json();
         if (res && res.ok) {
@@ -1983,19 +2034,13 @@
         btn.textContent = original;
         btn.style.pointerEvents = '';
         showStatus('Direct send failed — opening your mail app instead.', 'error');
-        // fall through to mailto below
       }
     }
 
-    // Fallback path: open the mail client
+    // mailto fallback if Apps Script also failed
     window.location.href = _lastMailtoHref;
-
-    // After a short delay, check if the page is still visible (mail clients
-    // that opened will often blur the tab). If we're still here, show fallback.
     setTimeout(function() {
-      if (document.visibilityState === 'visible') {
-        showFallback();
-      }
+      if (document.visibilityState === 'visible') showFallback();
     }, 1500);
   }
 
