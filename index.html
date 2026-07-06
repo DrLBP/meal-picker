@@ -1982,7 +1982,9 @@
     doSend();
   }
 
-  // ── Send button: one-tap send via Apps Script, mailto as fallback ──
+  // ── Send button: one-tap send via Apps Script.
+  //    (mailto + copy-panel fallback only exists for the case where no
+  //     Apps Script endpoint is configured at all) ──
   async function handleSendClick(e) {
     e.preventDefault();
     if (_lastMailtoHref === '#') return;
@@ -2030,14 +2032,19 @@
         }
         throw new Error((res && res.error) || 'Send failed');
       } catch (err) {
-        console.warn('One-tap send failed, falling back to mail app:', err);
+        // NOTE: a send that actually worked can still land here (the browser
+        // sometimes can't read the Apps Script response even though the email
+        // went through). Don't auto-open a mail app or the copy-message
+        // panel — that risks sending the shopping list twice.
+        console.warn('One-tap send: could not confirm the send:', err);
         btn.textContent = original;
         btn.style.pointerEvents = '';
-        showStatus('Direct send failed — opening your mail app instead.', 'error');
+        showStatus('⚠ Could not confirm the send. Wait a minute — if no confirmation email arrives, tap Send again.', 'error');
       }
+      return; // one-tap mode never falls back to the mail app
     }
 
-    // mailto fallback if Apps Script also failed
+    // mailto fallback (only used when no Apps Script endpoint is configured)
     window.location.href = _lastMailtoHref;
     setTimeout(function() {
       if (document.visibilityState === 'visible') showFallback();
@@ -2082,8 +2089,9 @@
   }
 
   // ── Update the send-section wording when one-tap send is active ──
+  // (applies on mobile too — one-tap send is used on every device now)
   function updateSendCopy() {
-    if (!SEND_ENDPOINT || IS_MOBILE) return;
+    if (!SEND_ENDPOINT) return;
     const desc = document.querySelector('.send-desc');
     const note = document.querySelector('.email-note');
     if (desc) desc.innerHTML = 'Tap the button below and your shopping list goes straight to Claude — no email app needed. Claude will shop Safeway automatically and email you a summary when done.';
