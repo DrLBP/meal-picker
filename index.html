@@ -1108,18 +1108,7 @@
   </div>
 </div>
 
-<!-- ── Shopper picker overlay ── -->
-<div id="shopper-picker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:999;align-items:center;justify-content:center;">
-  <div style="background:#FEF9EF;border:2px solid #343434;border-radius:12px;padding:32px 28px;max-width:320px;width:90%;text-align:center;font-family:Barlow,Arial,sans-serif;">
-    <p style="margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#888;">Who's shopping?</p>
-    <p style="margin:0 0 24px;font-size:15px;color:#343434;">Confirmation email goes to whoever shops.</p>
-    <div style="display:flex;gap:12px;justify-content:center;">
-      <button onclick="selectShopper('dashporter@gmail.com')" style="flex:1;padding:14px 0;background:#343434;color:#FEF9EF;border:none;border-radius:8px;font-size:16px;font-family:Barlow,Arial,sans-serif;font-weight:600;cursor:pointer;">Dash</button>
-      <button onclick="selectShopper('em.hamilton.vt@gmail.com')" style="flex:1;padding:14px 0;background:#343434;color:#FEF9EF;border:none;border-radius:8px;font-size:16px;font-family:Barlow,Arial,sans-serif;font-weight:600;cursor:pointer;">Emily</button>
-    </div>
-    <button onclick="hidePicker()" style="margin-top:16px;background:none;border:none;color:#888;font-size:13px;cursor:pointer;font-family:Barlow,Arial,sans-serif;">Cancel</button>
-  </div>
-</div>
+<!-- Shopper picker removed — grocery results always go to the shared family inbox. -->
 
 <!-- ── Send to Claude ── -->
 <div id="claude-output-section">
@@ -1960,27 +1949,9 @@
     document.getElementById('send-email-btn').href = _lastMailtoHref;
   }
 
-  // ── Shopper picker ──
-  var _shopperEmail = null;
-
-  const SHOPPERS = [
-    { name: 'Dash',  email: 'dashporter@gmail.com' },
-    { name: 'Emily', email: 'em.hamilton.vt@gmail.com' },
-  ];
-
-  function showShopperPicker() {
-    document.getElementById('shopper-picker').style.display = 'flex';
-  }
-
-  function hidePicker() {
-    document.getElementById('shopper-picker').style.display = 'none';
-  }
-
-  function selectShopper(email) {
-    _shopperEmail = email;
-    hidePicker();
-    doSend();
-  }
+  // ── Shopper selection removed ──
+  // Grocery results now always go to the shared family inbox
+  // (ThePorterMailbox@gmail.com), so there is no "who's shopping?" step.
 
   // ── Send button: one-tap send via Apps Script.
   //    (mailto + copy-panel fallback only exists for the case where no
@@ -1989,10 +1960,11 @@
     e.preventDefault();
     if (_lastMailtoHref === '#') return;
 
-    // Ask who's shopping so the confirmation goes to the right inbox
+    // No "who's shopping?" step — grocery results always go to the shared
+    // family inbox (ThePorterMailbox@gmail.com), handled by the backend.
     if (SEND_ENDPOINT) {
-      showShopperPicker();
-      return; // doSend() is called after shopper is selected
+      doSend();
+      return;
     }
 
     // mailto fallback (no Apps Script configured)
@@ -2015,7 +1987,7 @@
             token:   SEND_TOKEN,
             subject: 'Shop Groceries',
             body:    _lastEmailBody,
-            replyTo: _shopperEmail || 'dashporter@gmail.com',
+            replyTo: 'dashporter@gmail.com',
           })
         });
         const res = await r.json();
