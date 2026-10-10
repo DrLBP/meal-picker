@@ -2167,13 +2167,69 @@
     if (!ADD_RECIPE_ENDPOINT || ADD_RECIPE_ENDPOINT.indexOf('PASTE_') === 0) {
       throw new Error('Add Recipe isn\'t set up yet. Paste your Web App URL into index.html (ADD_RECIPE_ENDPOINT).');
     }
-    const r = await fetch(ADD_RECIPE_ENDPOINT, {
-      method: 'POST',
-      body: JSON.stringify(Object.assign({ token: ADD_RECIPE_TOKEN }, payloadObj))
-    });
-    const res = await r.json();
-    return res;
+    // Google sometimes answers with an error PAGE instead of the script's JSON
+    // reply (seen mostly on phones), or the connection drops mid-reply. In both
+    // cases the script may still have run, so we flag the error as "unconfirmed"
+    // and let the caller check the sheet before anyone retries.
+    let text;
+    try {
+      const r = await fetch(ADD_RECIPE_ENDPOINT, {
+        method: 'POST',
+        body: JSON.stringify(Object.assign({ token: ADD_RECIPE_TOKEN }, payloadObj))
+      });
+      text = await r.text();
+    } catch (netErr) {
+      const e = new Error('No reply from Google (connection problem).');
+      e.unconfirmed = true;
+      throw e;
+    }
+    try {
+      return JSON.parse(text);
+    } catch (parseErr) {
+      const e = new Error('Google sent back an unreadable reply.');
+      e.unconfirmed = true;
+      throw e;
+    }
   }
+
+  // ── Did a save actually land? Look for the name in the published sheet. ──
+  //    Used when a save got no readable reply, so a retry can't add a duplicate.
+  function arNormName(s) {
+    return String(s || '').replace(/['"]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+  async function sheetHasName(url, colNames, name) {
+    if (!url) return false;
+    const text  = await fetchWithProxy(url);
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return false;
+    const headers = lines[0].split(',').map(h =>
+      h.trim().toLowerCase().replace(/\s+/g, '_').replace(/['"]/g, '')
+    );
+    const col = findCol(headers, colNames);
+    if (col === -1) return false;
+    const want = arNormName(name);
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCSVLine(lines[i]);
+      if (cols && arNormName(cols[col]) === want) return true;
+    }
+    return false;
+  }
+  // Checks a few times over ~30 seconds, because Google takes a moment to
+  // publish new rows. Returns true as soon as the name shows up.
+  async function confirmSavedInSheet(url, colNames, name, waits) {
+    waits = waits || [2500, 5000, 8000, 12000];
+    for (let i = 0; i < waits.length; i++) {
+      await new Promise(function(res) { setTimeout(res, waits[i]); });
+      try { if (await sheetHasName(url, colNames, name)) return true; } catch (_) {}
+    }
+    return false;
+  }
+  const AR_MEAL_COLS   = ['meal_name', 'meal', 'dish'];
+  const AR_STAPLE_COLS = ['name', 'item', 'staple'];
+  const AR_UNCONFIRMED_MSG = 'Google didn\'t confirm the save, and it isn\'t showing in the sheet yet. ' +
+    'Wait a minute, then tap the button again. It will re-check the sheet first, so it won\'t add a duplicate.';
+  let arUnconfirmedMeal   = null;   // meal name whose last save got no readable reply
+  let asUnconfirmedStaple = null;   // same, for household staples
 
   // ── STEP 1 → 2: send card to Claude, render editable preview ──
   async function extractRecipe() {
@@ -2194,7 +2250,9 @@
       document.getElementById('ar-step-upload').style.display = 'none';
       document.getElementById('ar-preview').style.display = 'block';
     } catch (err) {
-      arSetStatus(String(err.message || err), 'error');
+      arSetStatus(err && err.unconfirmed
+        ? 'Google didn\'t send a readable reply. Nothing was saved. Please try again.'
+        : String(err.message || err), 'error');
     } finally {
       btn.disabled = false; btn.textContent = orig;
     }
@@ -2257,6 +2315,25 @@
     const btn = document.getElementById('ar-confirm-btn');
     const orig = btn.textContent;
     btn.disabled = true; btn.textContent = 'Saving…';
+    const saved = function() {
+      arUnconfirmedMeal = null;
+      arSetStatus('✓ Saved! "' + meal + '" will appear after the sheet refreshes.', 'ok');
+      btn.textContent = '✓ Saved';
+      // Give Google a moment to publish, then reload the meal list.
+      setTimeout(function() {
+        closeAddRecipe();
+        showStatus('Refreshing meals to include "' + meal + '"…', 'info');
+        loadAll();
+      }, 1800);
+    };
+    // If the last attempt for this meal got no readable reply, look in the
+    // sheet BEFORE sending again, so a retry can't create a duplicate.
+    if (arUnconfirmedMeal === arNormName(meal)) {
+      arSetStatus('Checking whether your earlier attempt saved…', 'info');
+      let already = false;
+      try { already = await sheetHasName(getCurrentUrl(), AR_MEAL_COLS, meal); } catch (_) {}
+      if (already) { saved(); return; }
+    }
     arSetStatus('Saving your recipe and uploading the photo…', 'info');
     try {
       // Produce the final cropped + padded square photo from the user's crop box.
@@ -2269,16 +2346,16 @@
         foodPhotoBase64: foodPhotoBase64
       });
       if (!res || !res.ok) throw new Error((res && res.error) || 'Save failed.');
-      arSetStatus('✓ Saved! "' + meal + '" will appear after the sheet refreshes.', 'ok');
-      btn.textContent = '✓ Saved';
-      // Give Google a moment to publish, then reload the meal list.
-      setTimeout(function() {
-        closeAddRecipe();
-        showStatus('Refreshing meals to include "' + meal + '"…', 'info');
-        loadAll();
-      }, 1800);
+      saved();
     } catch (err) {
-      arSetStatus(String(err.message || err), 'error');
+      if (err && err.unconfirmed) {
+        arSetStatus('No clear reply from Google. Checking whether your recipe saved…', 'info');
+        if (await confirmSavedInSheet(getCurrentUrl(), AR_MEAL_COLS, meal)) { saved(); return; }
+        arUnconfirmedMeal = arNormName(meal);
+        arSetStatus(AR_UNCONFIRMED_MSG, 'error');
+      } else {
+        arSetStatus(String(err.message || err), 'error');
+      }
       btn.disabled = false; btn.textContent = orig;
     }
   }
@@ -2492,6 +2569,22 @@
     const btn = document.getElementById('as-save-btn');
     const orig = btn.textContent;
     btn.disabled = true; btn.textContent = 'Saving…';
+    const saved = function() {
+      asUnconfirmedStaple = null;
+      asSetStatus('✓ Saved! "' + name + '" will appear after the sheet refreshes.', 'ok');
+      btn.textContent = '✓ Saved';
+      setTimeout(function() {
+        closeAddStaple();
+        showStatus('Refreshing to include "' + name + '"…', 'info');
+        loadAll();
+      }, 1600);
+    };
+    if (asUnconfirmedStaple === arNormName(name)) {
+      asSetStatus('Checking whether your earlier attempt saved…', 'info');
+      let already = false;
+      try { already = await sheetHasName(getExtrasUrl(), AR_STAPLE_COLS, name); } catch (_) {}
+      if (already) { saved(); return; }
+    }
     asSetStatus('Saving your staple…', 'info');
     try {
       const photoBase64 = asPhotoDataUrl ? exportCropCtx(cropCtxStaple) : '';
@@ -2504,15 +2597,16 @@
         photoBase64: photoBase64
       });
       if (!res || !res.ok) throw new Error((res && res.error) || 'Save failed.');
-      asSetStatus('✓ Saved! "' + name + '" will appear after the sheet refreshes.', 'ok');
-      btn.textContent = '✓ Saved';
-      setTimeout(function() {
-        closeAddStaple();
-        showStatus('Refreshing to include "' + name + '"…', 'info');
-        loadAll();
-      }, 1600);
+      saved();
     } catch (err) {
-      asSetStatus(String(err.message || err), 'error');
+      if (err && err.unconfirmed) {
+        asSetStatus('No clear reply from Google. Checking whether your staple saved…', 'info');
+        if (await confirmSavedInSheet(getExtrasUrl(), AR_STAPLE_COLS, name)) { saved(); return; }
+        asUnconfirmedStaple = arNormName(name);
+        asSetStatus(AR_UNCONFIRMED_MSG, 'error');
+      } else {
+        asSetStatus(String(err.message || err), 'error');
+      }
       btn.disabled = false; btn.textContent = orig;
     }
   }
